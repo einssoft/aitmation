@@ -42,6 +42,7 @@ from . import (
     __version__,
     gateway,
     legal,
+    library,
     mcp_client,
     mcp_servers,
     metrics,
@@ -144,6 +145,10 @@ class BriefingFields(BaseModel):
 
     role: dict[str, str] = Field(default_factory=dict)
     instructions: dict[str, str] = Field(default_factory=dict)
+    # None keeps what the file has (the step panel does not edit these).
+    name: dict[str, str] | None = None
+    description: dict[str, str] | None = None
+    knowledge: list[str] | None = None
     limits: list[str] = Field(default_factory=list)
     model_role: str = ""
     flexibility: str = "strict"
@@ -222,6 +227,37 @@ class McpServerBody(BaseModel):
     tools: list[str] = Field(default_factory=list)
     timeout_seconds: int = 60
     note: str = ""
+
+
+class NewAgentBody(BaseModel):
+    """An agent made in the library: what people call it and what it is
+    for; the rest is edited on its page."""
+
+    name: str = Field(min_length=2, max_length=80)
+    purpose: str = Field(default="", max_length=400)
+    instructions: str = Field(default="", max_length=8000)
+    lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
+    actor: str = "ui"
+
+
+class NewToolBody(BaseModel):
+    """A tool from one of the library's forms (library.tool_toml)."""
+
+    kind: str
+    name: str = Field(min_length=2, max_length=80)
+    description: str = Field(default="", max_length=400)
+    lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
+    form: dict = Field(default_factory=dict)
+    actor: str = "ui"
+
+
+class CopyBlockBody(BaseModel):
+    """A block of an installed solution as an own, changeable copy."""
+
+    solution: str
+    kind: str = Field(pattern=r"^(ai|tool)$")
+    id: str
+    actor: str = "ui"
 
 
 class McpToolBody(BaseModel):
@@ -2785,6 +2821,9 @@ def build_router(runtime: Runtime) -> APIRouter:
             if briefing is not None:
                 config = briefing.to_config(app.skills) if kind == "ai" else {}
                 summary = {
+                    "name": dict(briefing.name),
+                    "description": dict(briefing.description),
+                    "knowledge": [str(k) for k in (briefing.context or {}).get("knowledge") or []],
                     "role": briefing.role,
                     "instructions": briefing.instructions,
                     "limits": list(briefing.limits),
@@ -2993,9 +3032,31 @@ def build_router(runtime: Runtime) -> APIRouter:
         current = app.briefings.get(element_id)
         if current is None:
             raise HTTPException(status_code=404, detail=f"no briefing {element_id!r} in solution")
+        context = dict(current.context)
+        if body.knowledge is not None:
+            spaces = [k.strip() for k in body.knowledge if k.strip()]
+            unknown = [k for k in spaces if runtime.knowledge.space(k) is None]
+            if unknown:
+                raise HTTPException(
+                    status_code=422, detail=f"unknown knowledge space(s): {unknown}"
+                )
+            # bindings made from an input ({trigger.space}) are the process's, not the form's
+            bound = [k for k in context.get("knowledge") or [] if str(k).startswith("{")]
+            if spaces or bound:
+                context["knowledge"] = spaces + bound
+            else:
+                context.pop("knowledge", None)
+
+        def label(given: dict[str, str] | None, kept: dict[str, str]) -> dict[str, str]:
+            if given is None:
+                return kept
+            return {k: " ".join(v.split()) for k, v in given.items() if v.strip()}
+
         try:
             briefing = Briefing(
                 id=element_id,
+                name=label(body.name, current.name),
+                description=label(body.description, current.description),
                 role={k: v for k, v in body.role.items() if v.strip()},
                 instructions={k: v for k, v in body.instructions.items() if v.strip()},
                 limits=tuple({"en": text} for text in body.limits if text.strip()),
@@ -3004,7 +3065,7 @@ def build_router(runtime: Runtime) -> APIRouter:
                 skills=tuple(s for s in body.skills if s.strip()),
                 tools=tuple(t for t in body.tools if t.strip()),
                 output={k: v for k, v in body.output.items() if k.strip()},
-                context=current.context,
+                context=context,
                 confidence_threshold=body.confidence_threshold,
                 extra=current.extra,
             )
@@ -3413,6 +3474,145 @@ def build_router(runtime: Runtime) -> APIRouter:
         )
         return {
             "ok": True, "id": body.id, "kind": kind, "files": sorted(files), "warnings": warnings
+        }
+
+    # -- the library: agents and tools as building blocks ---------------------
+
+    def _library_names(app) -> dict[str, str]:
+        return _titles(app.manifest.name, app.id)
+
+    def _own_solution(request: Request, actor: str):
+        """The instance's solution for blocks made here - created on first use."""
+        if library.OWN not in runtime.apps:
+            solution_create(
+                NewSolutionBody(id=library.OWN, name=library.OWN_NAMES,
+                                description=library.OWN_DESCRIPTIONS, actor=actor),
+                request,
+            )
+        return _solution(library.OWN)
+
+    def _free_id(wanted: str, taken) -> str:
+        candidate, n = wanted, 2
+        while candidate in taken:
+            candidate, n = f"{wanted}-{n}", n + 1
+        return candidate
+
+    @router.get("/library")
+    def library_view() -> dict:
+        """Agents and tools of every solution: where each comes from,
+        whether it may be changed here and what uses it."""
+        apps = {k: a for k, a in runtime.apps.items() if a.format == 2}
+        return {
+            "own": library.OWN,
+            "has_own": library.OWN in apps,
+            "agents": library.agents(apps, _writable, _library_names),
+            "tools": library.tools(apps, _writable, _library_names),
+            "tool_kinds": list(library.TOOL_KINDS),
+            "form_kinds": list(library.FORM_KINDS),
+            "knowledge": [
+                {"id": s["id"], "title": s.get("title") or s["id"],
+                 "data_class": s.get("data_class")}
+                for s in runtime.knowledge.overview()
+            ],
+        }
+
+    @router.post("/library/own", status_code=201)
+    def library_own(body: ActorBody, request: Request) -> dict:
+        _require_admin(request)
+        return {"ok": True, "solution": _own_solution(request, body.actor).id}
+
+    @router.post("/library/agents", status_code=201)
+    def library_agent_create(body: NewAgentBody, request: Request) -> dict:
+        """A new agent in the instance's own solution: named, with its
+        purpose - complete enough to open its page and go on there."""
+        from .aimn import Briefing, briefing_to_toml
+
+        _require_admin(request)
+        app = _own_solution(request, body.actor)
+        wanted = library.slug(body.name)
+        if not wanted:
+            raise HTTPException(status_code=422, detail="name: at least one letter")
+        agent_id = _free_id(wanted, set(app.briefings) | set(app.skills))
+        name = " ".join(body.name.split())
+        purpose = " ".join(body.purpose.split())
+        role = next(iter(app.manifest.model_roles), "default")
+        briefing = Briefing(
+            id=agent_id,
+            name={body.lang: name},
+            description={body.lang: purpose} if purpose else {},
+            instructions={body.lang: body.instructions.strip() or purpose or name},
+            model_role=role,
+            output={"result": library.RESULT_FIELD.get(body.lang, library.RESULT_FIELD["en"])},
+        )
+        rel = f"ai/{agent_id}.aimn.toml"
+        warnings = _write_validated(
+            app, {rel: briefing_to_toml(briefing)}, actor_of(request, body.actor),
+            f"agent {agent_id} in {app.id}",
+        )
+        return {"ok": True, "solution": app.id, "id": agent_id, "warnings": warnings}
+
+    @router.post("/library/tools", status_code=201)
+    def library_tool_create(body: NewToolBody, request: Request) -> dict:
+        _require_admin(request)
+        app = _own_solution(request, body.actor)
+        wanted = library.slug(body.name)
+        if not wanted:
+            raise HTTPException(status_code=422, detail="name: at least one letter")
+        tool_id = _free_id(wanted, set(app.tools))
+        try:
+            text = library.tool_toml(
+                body.kind, tool_id, body.name, body.description, body.lang, body.form
+            )
+        except library.LibraryError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        warnings = _write_validated(
+            app, {f"tools/{tool_id}.toml": text}, actor_of(request, body.actor),
+            f"tool {tool_id} in {app.id}",
+        )
+        return {"ok": True, "solution": app.id, "id": tool_id, "warnings": warnings}
+
+    @router.post("/library/copy", status_code=201)
+    def library_copy(body: CopyBlockBody, request: Request) -> dict:
+        """"Adapt a copy": a block of an installed solution becomes an own
+        one under a free id. The original stays what its publisher
+        shipped - an update never overwrites the adaptation."""
+        _require_admin(request)
+        source = _solution(body.solution)
+        if source.id == library.OWN:
+            raise HTTPException(status_code=409, detail="this block is your own already")
+        text = _element_path(source, body.kind, body.id).read_text(encoding="utf-8")
+        app = _own_solution(request, body.actor)
+        if body.kind == "ai":
+            new_id = _free_id(body.id, set(app.briefings) | set(app.skills))
+            rel, files = f"ai/{new_id}.aimn.toml", {}
+            briefing = source.briefings[body.id]
+            # what the copy leans on must be visible from the own solution
+            missing = [t for t in briefing.tools if t not in app.tools]
+            missing_skills = [s for s in briefing.skills if s not in app.skills]
+            if missing or missing_skills:
+                raise HTTPException(status_code=409, detail={
+                    "reason": "copy what the agent uses first",
+                    "tools": missing, "skills": missing_skills})
+            changed = None
+            if briefing.model_role and briefing.model_role not in app.manifest.model_roles:
+                role = source.manifest.model_roles.get(briefing.model_role)
+                manifest = (app.path / "solution.toml").read_text(encoding="utf-8")
+                changed = {"solution.toml": manifest.rstrip("\n") + "\n\n" + "\n".join([
+                    f"[model_roles.{briefing.model_role}]",
+                    f"structured_output = {str(role is None or role.structured_output).lower()}",
+                    f"vision = {str(role is not None and role.vision).lower()}",
+                    f'max_data_class = "{role.max_data_class if role else "internal"}"',
+                ]) + "\n"}
+        else:
+            new_id = _free_id(body.id, set(app.tools))
+            rel, files, changed = f"tools/{new_id}.toml", {}, None
+        files[rel] = library.retitle(text, body.id, new_id)
+        warnings = _write_validated(
+            app, files, actor_of(request, body.actor),
+            f"{body.kind} {new_id} copied from {source.id}", changed=changed,
+        )
+        return {
+            "ok": True, "solution": app.id, "id": new_id, "kind": body.kind, "warnings": warnings
         }
 
     def _provided_briefings(app) -> set[str]:

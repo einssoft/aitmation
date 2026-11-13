@@ -42,6 +42,8 @@ MODEL_ROLE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
 _BRIEFING_KEYS = frozenset(
     {
         "id",
+        "name",
+        "description",
         "role",
         "instructions",
         "limits",
@@ -131,6 +133,10 @@ class Briefing:
     context: dict = field(default_factory=dict)
     confidence_threshold: float | None = None
     extra: dict = field(default_factory=dict)
+    # What people call the agent and what it is for (the workshop's
+    # library). Labels only: never part of the prompt or its hash.
+    name: dict[str, str] = field(default_factory=dict)
+    description: dict[str, str] = field(default_factory=dict)
 
     def to_config(self, skills: dict[str, Briefing] | None = None) -> dict:
         """The AgentStep config the runtime executes.
@@ -203,6 +209,8 @@ class Briefing:
             context=context,
             confidence_threshold=self.confidence_threshold,
             extra=self.extra,
+            name=self.name,
+            description=self.description,
         )
 
 
@@ -298,6 +306,14 @@ def briefing_from_dict(data: dict, source: str = "<dict>", default_id: str = "")
             threshold = float(threshold)
         except (TypeError, ValueError):
             raise BriefingError(f"{source}: confidence_threshold must be a number") from None
+    labels: dict[str, dict[str, str]] = {}
+    for key in ("name", "description"):
+        value = data.get(key, {})
+        if isinstance(value, str):
+            value = {"de": value} if value.strip() else {}
+        if not isinstance(value, dict) or not all(isinstance(v, str) for v in value.values()):
+            raise BriefingError(f"{source}: {key} must be a text or a table per language")
+        labels[key] = {k: v for k, v in value.items() if v.strip()}
     extra = {key: data[key] for key in PASS_THROUGH_KEYS if key in data}
     if "personal_data" in extra and extra["personal_data"] not in (True, False, "sources"):
         raise BriefingError(
@@ -316,6 +332,8 @@ def briefing_from_dict(data: dict, source: str = "<dict>", default_id: str = "")
         context=dict(context),
         confidence_threshold=threshold,
         extra=extra,
+        name=labels["name"],
+        description=labels["description"],
     )
 
 
@@ -363,6 +381,10 @@ def briefing_to_toml(briefing: Briefing) -> str:
     format is small and fixed, so a hand-rolled writer keeps zero
     dependencies and a stable key order)."""
     lines = [f"id = {_q(briefing.id)}"]
+    for key in ("name", "description"):
+        table = getattr(briefing, key)
+        if table:
+            lines.append(f"{key} = {_toml_value(table)}")
     if briefing.model_role:
         lines.append(f"model_role = {_q(briefing.model_role)}")
     if briefing.flexibility != "strict":

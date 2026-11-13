@@ -62,6 +62,10 @@ active on reload.
   state.
 - `trust.py`, `catalog.py` – signed bundles and trust levels (Ed25519), a
   signed catalogue to install solutions from, safe unpacking, recalls.
+- `library.py` – the building-block view across solutions: every agent
+  (briefing) and tool with its origin and where it is used, new blocks
+  from short forms into the instance's own solution (`own`), and "adapt a
+  copy" of a shipped block.
 - `drafts.py`, `scaffold.py`, `workflow_import.py` – drafts with an
   approval step, scaffolds for new elements, and the translation of
   workflows from n8n, Activepieces, Make and Zapier into drafts.

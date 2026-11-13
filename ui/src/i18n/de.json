@@ -1317,5 +1317,98 @@
     "pickSource": "Mindestens eine Quelle wählen.",
     "noMember": "Kein Mandant gewählt.",
     "tooLarge": "Aufnahme grösser als 24 MB – bitte kürzer aufnehmen oder in zwei Teilen."
+  },
+  "library": {
+    "own": "Eigener Baustein",
+    "unused": "Noch nirgends verwendet.",
+    "agent": "Agent",
+    "effect": {
+      "read": "liest",
+      "external": "wirkt nach aussen – Freigabe"
+    },
+    "newAgent": "+ Neuer Agent",
+    "agentsIntro": "Ein Agent ist ein Schritt mit klarem Auftrag: Er liest, prüft und schlägt vor. Nach aussen handelt er nie selbst – das geschieht im Ablauf hinter einer Freigabe.",
+    "name": "Name",
+    "purpose": "Wofür ist der Agent da?",
+    "purposeHint": "Ein Satz, wie Sie es einer neuen Kollegin erklären würden.",
+    "create": "Anlegen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saved": "Gespeichert und geprüft.",
+    "knowledgeCount": "{n} × Wissen",
+    "toolsCount": "{n} × Werkzeug",
+    "usedCount": "verwendet in {n}",
+    "noAgents": "Noch keine Agenten. Mit „+ Neuer Agent“ entsteht der erste.",
+    "copy": "Kopie anpassen",
+    "readOnly": "Dieser Agent gehört zu einer installierten Lösung und ist nur lesbar. „Kopie anpassen“ legt eine eigene Fassung an – ein Update der Lösung überschreibt sie nie.",
+    "role": "Rolle",
+    "roleHint": "Wer der Agent ist – ein Satz in der Du-Form.",
+    "instructions": "Anweisungen",
+    "instructionsHint": "Wie soll er arbeiten, worauf soll er achten?",
+    "limits": "Grenzen",
+    "limitsHint": "Was er nie tut – eine Zeile je Grenze.",
+    "result": "Ergebnis",
+    "resultHint": "Die Felder, die der Agent zurückgibt. Spätere Schritte und die Freigabe lesen genau diese.",
+    "field": "Feld",
+    "fieldMeaning": "Was steht darin?",
+    "addField": "+ Feld",
+    "remove": "Entfernen",
+    "knowledge": "Wissen",
+    "knowledgeHint": "Wissensräume, in denen er nachschlägt. Ein Raum mit höherer Vertraulichkeit schränkt die erlaubten Modelle ein.",
+    "toolsHint": "Lesende Werkzeuge nutzt der Agent selbst.",
+    "actingHint": "Mindestens ein gewähltes Werkzeug wirkt nach aussen. Der Agent kann es vorschlagen; ausgeführt wird es nur in einem Ablauf nach einer Freigabe.",
+    "modelRole": "Modellrolle",
+    "modelRoleHint": "Was der Agent von einem Modell braucht – welches Modell die Rolle erfüllt, legen Sie unter Verwaltung → Modelle fest.",
+    "usedIn": "Verwendet in",
+    "toolsIntro": "Ein Werkzeug ist eine einzelne Fähigkeit: eine Seite lesen, suchen, eine Schnittstelle aufrufen. Lesende Werkzeuge laufen ohne Freigabe; alles, was nach aussen wirkt, wartet im Ablauf auf einen Menschen.",
+    "new": "+ Neu",
+    "toolMade": "Werkzeug „{id}“ angelegt und geprüft.",
+    "toolDescription": "Was tut das Werkzeug?",
+    "toolDescriptionHint": "Das Modell liest diesen Satz, um zu entscheiden, wann es passt.",
+    "provider": "Suchdienst",
+    "secret": "Geheimnis",
+    "secretHint": "Name eines Werkzeug-Geheimnisses (Verwaltung → Modelle). Der Wert steht nie im Werkzeug.",
+    "maxHits": "Treffer",
+    "method": "Methode",
+    "url": "Adresse",
+    "urlHintApi": "https, fester Host. Eingaben im Pfad als {input:name}.",
+    "urlHintJson": "https, feste Adresse ohne Fragezeichen – Eingaben gehen als Abfrage-Parameter mit.",
+    "params": "Eingaben",
+    "paramsHint": "Namen, durch Komma getrennt – z. B. kunde, betrag.",
+    "response": "Was kommt zurück?",
+    "responseHint": "Eine Zeile je Ausgabe: name = Pfad in der Antwort, z. B. nummer = data.id",
+    "allTools": "Alle Werkzeuge",
+    "openSource": "Deklaration ansehen",
+    "noTools": "Noch keine Werkzeuge.",
+    "kind": {
+      "page": {
+        "title": "Webseite lesen",
+        "text": "Holt den Text einer öffentlichen Seite, deren Adresse der Ablauf mitgibt."
+      },
+      "search": {
+        "title": "Websuche",
+        "text": "Sucht öffentliche Seiten zu einer Frage: Titel, Adresse, Auszug."
+      },
+      "json": {
+        "title": "Daten lesen",
+        "text": "Liest eine öffentliche Datenadresse (JSON) ohne Schlüssel."
+      },
+      "api": {
+        "title": "Schnittstelle aufrufen",
+        "text": "Ruft die API eines anderen Systems auf – schreiben, anlegen, senden."
+      },
+      "mcp": {
+        "title": "MCP-Server",
+        "text": "Ein Werkzeug eines verbundenen MCP-Servers. Server verbinden und Werkzeuge freigeben unter Verwaltung."
+      },
+      "client": {
+        "title": "Mensch oder Gerät",
+        "text": "Eine Aufgabe, die eine Person oder ein Gerät erledigt und zurückmeldet. Entsteht heute in der Lösung als Deklaration."
+      },
+      "action": {
+        "title": "Kern-Aktion",
+        "text": "Eine eingebaute Aktion des Kerns."
+      }
+    }
   }
 }

@@ -46,10 +46,10 @@ export const GROUPS: NavGroup[] = [
     key: "workshop",
     advanced: true,
     children: [
-      { to: "/workshop/solutions", key: "solutions" },
-      { to: "/workshop/templates", key: "templates" },
       { to: "/workshop/agents", key: "agents" },
       { to: "/workshop/tools", key: "tools" },
+      { to: "/workshop/solutions", key: "solutions" },
+      { to: "/workshop/templates", key: "templates" },
     ],
   },
   {

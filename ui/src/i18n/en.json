@@ -1317,5 +1317,98 @@
     "pickSource": "Pick at least one source.",
     "noMember": "No member chosen.",
     "tooLarge": "Recording larger than 24 MB – record shorter or in two parts."
+  },
+  "library": {
+    "own": "Your own",
+    "unused": "Not used anywhere yet.",
+    "agent": "Agent",
+    "effect": {
+      "read": "reads",
+      "external": "acts outside – approval"
+    },
+    "newAgent": "+ New agent",
+    "agentsIntro": "An agent is a step with a clear job: it reads, checks and proposes. It never acts towards the outside itself – that happens in a process, behind an approval.",
+    "name": "Name",
+    "purpose": "What is the agent for?",
+    "purposeHint": "One sentence, the way you would explain it to a new colleague.",
+    "create": "Create",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saved": "Saved and checked.",
+    "knowledgeCount": "{n} × knowledge",
+    "toolsCount": "{n} × tool",
+    "usedCount": "used in {n}",
+    "noAgents": "No agents yet. “+ New agent” makes the first.",
+    "copy": "Adapt a copy",
+    "readOnly": "This agent belongs to an installed solution and is read-only. “Adapt a copy” creates your own version – an update of the solution never overwrites it.",
+    "role": "Role",
+    "roleHint": "Who the agent is – one sentence addressed to it.",
+    "instructions": "Instructions",
+    "instructionsHint": "How should it work, what should it watch for?",
+    "limits": "Limits",
+    "limitsHint": "What it never does – one line per limit.",
+    "result": "Result",
+    "resultHint": "The fields the agent returns. Later steps and the approval read exactly these.",
+    "field": "Field",
+    "fieldMeaning": "What does it hold?",
+    "addField": "+ Field",
+    "remove": "Remove",
+    "knowledge": "Knowledge",
+    "knowledgeHint": "Knowledge spaces it looks things up in. A space with a higher confidentiality narrows the models allowed.",
+    "toolsHint": "Reading tools the agent uses itself.",
+    "actingHint": "At least one chosen tool acts outside. The agent can propose it; it runs only in a process, after an approval.",
+    "modelRole": "Model role",
+    "modelRoleHint": "What the agent needs from a model – which model fills the role is set under Administration → Models.",
+    "usedIn": "Used in",
+    "toolsIntro": "A tool is one ability: read a page, search, call an interface. Reading tools run without approval; anything that acts outside waits for a person in the process.",
+    "new": "+ New",
+    "toolMade": "Tool “{id}” created and checked.",
+    "toolDescription": "What does the tool do?",
+    "toolDescriptionHint": "The model reads this sentence to decide when it fits.",
+    "provider": "Search service",
+    "secret": "Secret",
+    "secretHint": "Name of a tool secret (Administration → Models). The value is never in the tool.",
+    "maxHits": "Hits",
+    "method": "Method",
+    "url": "Address",
+    "urlHintApi": "https, fixed host. Inputs in the path as {input:name}.",
+    "urlHintJson": "https, a fixed address without a question mark – inputs travel as query parameters.",
+    "params": "Inputs",
+    "paramsHint": "Names, separated by commas – e.g. customer, amount.",
+    "response": "What comes back?",
+    "responseHint": "One line per output: name = path in the answer, e.g. number = data.id",
+    "allTools": "All tools",
+    "openSource": "View declaration",
+    "noTools": "No tools yet.",
+    "kind": {
+      "page": {
+        "title": "Read a web page",
+        "text": "Fetches the text of a public page whose address the process hands over."
+      },
+      "search": {
+        "title": "Web search",
+        "text": "Searches public pages for a question: title, address, snippet."
+      },
+      "json": {
+        "title": "Read data",
+        "text": "Reads a public data address (JSON) without a key."
+      },
+      "api": {
+        "title": "Call an interface",
+        "text": "Calls another system's API – write, create, send."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "text": "A tool of a connected MCP server. Connect servers and allow tools under Administration."
+      },
+      "client": {
+        "title": "Person or device",
+        "text": "A task a person or a device does and reports back. Today it is made in the solution as a declaration."
+      },
+      "action": {
+        "title": "Core action",
+        "text": "A built-in action of the core."
+      }
+    }
   }
 }

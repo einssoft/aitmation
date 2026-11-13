@@ -747,6 +747,9 @@ export interface StepHistory {
 export interface BriefingFields {
   role: Record<string, string>;
   instructions: Record<string, string>;
+  name?: Record<string, string>;
+  description?: Record<string, string>;
+  knowledge?: string[];
   limits: string[];
   model_role: string;
   flexibility: string;
@@ -754,6 +757,51 @@ export interface BriefingFields {
   tools: string[];
   output: Record<string, string>;
   confidence_threshold?: number | null;
+}
+
+export interface BlockUse {
+  solution: string;
+  process?: string;
+  step?: string;
+  title?: Multilingual;
+  agent?: string;
+}
+
+interface LibraryBlock {
+  id: string;
+  solution: string;
+  solution_name: Multilingual;
+  writable: boolean;
+  own: boolean;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  used_in: BlockUse[];
+}
+
+export interface LibraryAgent extends LibraryBlock {
+  model_role: string;
+  tools: string[];
+  knowledge: string[];
+  outputs: string[];
+}
+
+export type ToolKind = "page" | "search" | "json" | "api" | "mcp" | "client" | "action";
+
+export interface LibraryTool extends LibraryBlock {
+  kind: ToolKind;
+  effect: string;
+  inputs: Record<string, string>;
+  outputs: Record<string, string>;
+}
+
+export interface LibraryView {
+  own: string;
+  has_own: boolean;
+  agents: LibraryAgent[];
+  tools: LibraryTool[];
+  tool_kinds: ToolKind[];
+  form_kinds: ToolKind[];
+  knowledge: { id: string; title: Multilingual; data_class: string | null }[];
 }
 
 export interface SolutionElement {
@@ -1219,6 +1267,14 @@ export class InstanceClient {
     this.call<{ ok: true; id: string; files: string[]; warnings: string[]; findings?: string[]; draft?: DraftMeta }>(`/solutions/${encodeURIComponent(app)}/elements/process/copy`, { method: "POST", body: JSON.stringify(body) });
   importProcess = (app: string, name: string, text: string) =>
     this.call<{ ok: true; id: string; files: string[]; warnings: string[]; findings?: string[]; draft?: DraftMeta }>(`/solutions/${encodeURIComponent(app)}/elements/process/import`, { method: "POST", body: JSON.stringify({ name, text }) });
+  library = () => this.call<LibraryView>("/library");
+  ensureOwnSolution = () => this.call<{ ok: true; solution: string }>("/library/own", { method: "POST", body: "{}" });
+  createAgent = (body: { name: string; purpose: string; lang: string }) =>
+    this.call<{ ok: true; solution: string; id: string }>("/library/agents", { method: "POST", body: JSON.stringify(body) });
+  createTool = (body: { kind: ToolKind; name: string; description: string; lang: string; form: Record<string, unknown> }) =>
+    this.call<{ ok: true; solution: string; id: string }>("/library/tools", { method: "POST", body: JSON.stringify(body) });
+  copyBlock = (solution: string, kind: "ai" | "tool", id: string) =>
+    this.call<{ ok: true; solution: string; id: string }>("/library/copy", { method: "POST", body: JSON.stringify({ solution, kind, id }) });
   mcpServers = () => this.call<{ stdio_allowed: boolean; servers: McpServerView[] }>("/mcp/servers");
   putMcpServer = (name: string, body: McpServerBody) =>
     this.call<McpServerView>(`/mcp/servers/${encodeURIComponent(name)}`, { method: "PUT", body: JSON.stringify(body) });

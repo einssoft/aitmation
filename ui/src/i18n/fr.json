@@ -1317,5 +1317,98 @@
     "pickSource": "Choisissez au moins une source.",
     "noMember": "Aucun mandant choisi.",
     "tooLarge": "Enregistrement supérieur à 24 Mo – enregistrez plus court ou en deux parties."
+  },
+  "library": {
+    "own": "Votre élément",
+    "unused": "Pas encore utilisé.",
+    "agent": "Agent",
+    "effect": {
+      "read": "lit",
+      "external": "agit vers l'extérieur – validation"
+    },
+    "newAgent": "+ Nouvel agent",
+    "agentsIntro": "Un agent est une étape avec une mission claire : il lit, vérifie et propose. Il n'agit jamais lui-même vers l'extérieur – cela se fait dans un processus, après validation.",
+    "name": "Nom",
+    "purpose": "À quoi sert l'agent ?",
+    "purposeHint": "Une phrase, comme vous l'expliqueriez à une nouvelle collègue.",
+    "create": "Créer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saved": "Enregistré et vérifié.",
+    "knowledgeCount": "{n} × savoir",
+    "toolsCount": "{n} × outil",
+    "usedCount": "utilisé dans {n}",
+    "noAgents": "Pas encore d'agent. « + Nouvel agent » crée le premier.",
+    "copy": "Adapter une copie",
+    "readOnly": "Cet agent appartient à une solution installée et est en lecture seule. « Adapter une copie » crée votre propre version – une mise à jour de la solution ne l'écrase jamais.",
+    "role": "Rôle",
+    "roleHint": "Qui est l'agent – une phrase qui s'adresse à lui.",
+    "instructions": "Instructions",
+    "instructionsHint": "Comment doit-il travailler, à quoi doit-il veiller ?",
+    "limits": "Limites",
+    "limitsHint": "Ce qu'il ne fait jamais – une ligne par limite.",
+    "result": "Résultat",
+    "resultHint": "Les champs que l'agent renvoie. Les étapes suivantes et la validation lisent exactement ceux-ci.",
+    "field": "Champ",
+    "fieldMeaning": "Que contient-il ?",
+    "addField": "+ Champ",
+    "remove": "Retirer",
+    "knowledge": "Savoir",
+    "knowledgeHint": "Espaces de savoir qu'il consulte. Un espace plus confidentiel restreint les modèles autorisés.",
+    "toolsHint": "L'agent utilise lui-même les outils de lecture.",
+    "actingHint": "Au moins un outil choisi agit vers l'extérieur. L'agent peut le proposer ; il ne s'exécute que dans un processus, après validation.",
+    "modelRole": "Rôle de modèle",
+    "modelRoleHint": "Ce que l'agent attend d'un modèle – le modèle qui remplit le rôle se choisit sous Administration → Modèles.",
+    "usedIn": "Utilisé dans",
+    "toolsIntro": "Un outil est une capacité : lire une page, chercher, appeler une interface. Les outils de lecture s'exécutent sans validation ; tout ce qui agit vers l'extérieur attend une personne dans le processus.",
+    "new": "+ Nouveau",
+    "toolMade": "Outil « {id} » créé et vérifié.",
+    "toolDescription": "Que fait l'outil ?",
+    "toolDescriptionHint": "Le modèle lit cette phrase pour décider quand il convient.",
+    "provider": "Service de recherche",
+    "secret": "Secret",
+    "secretHint": "Nom d'un secret d'outil (Administration → Modèles). La valeur n'est jamais dans l'outil.",
+    "maxHits": "Résultats",
+    "method": "Méthode",
+    "url": "Adresse",
+    "urlHintApi": "https, hôte fixe. Entrées dans le chemin sous la forme {input:nom}.",
+    "urlHintJson": "https, adresse fixe sans point d'interrogation – les entrées partent comme paramètres de requête.",
+    "params": "Entrées",
+    "paramsHint": "Noms séparés par des virgules – p. ex. client, montant.",
+    "response": "Que revient-il ?",
+    "responseHint": "Une ligne par sortie : nom = chemin dans la réponse, p. ex. numero = data.id",
+    "allTools": "Tous les outils",
+    "openSource": "Voir la déclaration",
+    "noTools": "Pas encore d'outils.",
+    "kind": {
+      "page": {
+        "title": "Lire une page web",
+        "text": "Récupère le texte d'une page publique dont le processus fournit l'adresse."
+      },
+      "search": {
+        "title": "Recherche web",
+        "text": "Cherche des pages publiques pour une question : titre, adresse, extrait."
+      },
+      "json": {
+        "title": "Lire des données",
+        "text": "Lit une adresse de données publique (JSON) sans clé."
+      },
+      "api": {
+        "title": "Appeler une interface",
+        "text": "Appelle l'API d'un autre système – écrire, créer, envoyer."
+      },
+      "mcp": {
+        "title": "Serveur MCP",
+        "text": "Un outil d'un serveur MCP connecté. Connecter les serveurs et autoriser les outils sous Administration."
+      },
+      "client": {
+        "title": "Personne ou appareil",
+        "text": "Une tâche qu'une personne ou un appareil exécute et confirme. Se crée aujourd'hui dans la solution comme déclaration."
+      },
+      "action": {
+        "title": "Action du noyau",
+        "text": "Une action intégrée du noyau."
+      }
+    }
   }
 }

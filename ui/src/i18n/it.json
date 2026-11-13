@@ -1317,5 +1317,98 @@
     "pickSource": "Scegli almeno una sorgente.",
     "noMember": "Nessun mandante scelto.",
     "tooLarge": "Registrazione oltre 24 MB – registra più breve o in due parti."
+  },
+  "library": {
+    "own": "Elemento proprio",
+    "unused": "Non ancora utilizzato.",
+    "agent": "Agente",
+    "effect": {
+      "read": "legge",
+      "external": "agisce verso l'esterno – approvazione"
+    },
+    "newAgent": "+ Nuovo agente",
+    "agentsIntro": "Un agente è un passo con un compito chiaro: legge, verifica e propone. Non agisce mai da solo verso l'esterno – ciò avviene in un processo, dopo un'approvazione.",
+    "name": "Nome",
+    "purpose": "A cosa serve l'agente?",
+    "purposeHint": "Una frase, come la spiegherebbe a una nuova collega.",
+    "create": "Creare",
+    "cancel": "Annullare",
+    "save": "Salvare",
+    "saved": "Salvato e verificato.",
+    "knowledgeCount": "{n} × sapere",
+    "toolsCount": "{n} × strumento",
+    "usedCount": "usato in {n}",
+    "noAgents": "Ancora nessun agente. «+ Nuovo agente» crea il primo.",
+    "copy": "Adattare una copia",
+    "readOnly": "Questo agente appartiene a una soluzione installata ed è di sola lettura. «Adattare una copia» crea la sua versione – un aggiornamento della soluzione non la sovrascrive mai.",
+    "role": "Ruolo",
+    "roleHint": "Chi è l'agente – una frase rivolta a lui.",
+    "instructions": "Istruzioni",
+    "instructionsHint": "Come deve lavorare, a cosa deve prestare attenzione?",
+    "limits": "Limiti",
+    "limitsHint": "Ciò che non fa mai – una riga per limite.",
+    "result": "Risultato",
+    "resultHint": "I campi che l'agente restituisce. I passi successivi e l'approvazione leggono esattamente questi.",
+    "field": "Campo",
+    "fieldMeaning": "Cosa contiene?",
+    "addField": "+ Campo",
+    "remove": "Rimuovere",
+    "knowledge": "Sapere",
+    "knowledgeHint": "Spazi di sapere che consulta. Uno spazio più riservato restringe i modelli ammessi.",
+    "toolsHint": "Gli strumenti di lettura li usa l'agente stesso.",
+    "actingHint": "Almeno uno strumento scelto agisce verso l'esterno. L'agente può proporlo; viene eseguito solo in un processo, dopo un'approvazione.",
+    "modelRole": "Ruolo del modello",
+    "modelRoleHint": "Ciò che l'agente richiede a un modello – quale modello ricopre il ruolo si imposta in Amministrazione → Modelli.",
+    "usedIn": "Usato in",
+    "toolsIntro": "Uno strumento è una singola capacità: leggere una pagina, cercare, chiamare un'interfaccia. Gli strumenti di lettura funzionano senza approvazione; tutto ciò che agisce verso l'esterno attende una persona nel processo.",
+    "new": "+ Nuovo",
+    "toolMade": "Strumento «{id}» creato e verificato.",
+    "toolDescription": "Cosa fa lo strumento?",
+    "toolDescriptionHint": "Il modello legge questa frase per decidere quando è adatto.",
+    "provider": "Servizio di ricerca",
+    "secret": "Segreto",
+    "secretHint": "Nome di un segreto di strumento (Amministrazione → Modelli). Il valore non sta mai nello strumento.",
+    "maxHits": "Risultati",
+    "method": "Metodo",
+    "url": "Indirizzo",
+    "urlHintApi": "https, host fisso. Input nel percorso come {input:nome}.",
+    "urlHintJson": "https, indirizzo fisso senza punto interrogativo – gli input viaggiano come parametri di query.",
+    "params": "Input",
+    "paramsHint": "Nomi separati da virgole – p. es. cliente, importo.",
+    "response": "Cosa torna indietro?",
+    "responseHint": "Una riga per output: nome = percorso nella risposta, p. es. numero = data.id",
+    "allTools": "Tutti gli strumenti",
+    "openSource": "Vedere la dichiarazione",
+    "noTools": "Ancora nessuno strumento.",
+    "kind": {
+      "page": {
+        "title": "Leggere una pagina web",
+        "text": "Recupera il testo di una pagina pubblica il cui indirizzo è fornito dal processo."
+      },
+      "search": {
+        "title": "Ricerca web",
+        "text": "Cerca pagine pubbliche per una domanda: titolo, indirizzo, estratto."
+      },
+      "json": {
+        "title": "Leggere dati",
+        "text": "Legge un indirizzo dati pubblico (JSON) senza chiave."
+      },
+      "api": {
+        "title": "Chiamare un'interfaccia",
+        "text": "Chiama l'API di un altro sistema – scrivere, creare, inviare."
+      },
+      "mcp": {
+        "title": "Server MCP",
+        "text": "Uno strumento di un server MCP collegato. Collegare i server e autorizzare gli strumenti in Amministrazione."
+      },
+      "client": {
+        "title": "Persona o dispositivo",
+        "text": "Un compito che una persona o un dispositivo svolge e conferma. Oggi nasce nella soluzione come dichiarazione."
+      },
+      "action": {
+        "title": "Azione del nucleo",
+        "text": "Un'azione integrata del nucleo."
+      }
+    }
   }
 }
