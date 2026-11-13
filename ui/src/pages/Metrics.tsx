@@ -124,6 +124,45 @@ function MemberFigures({ member, data, onSaved }: { member: Member; data: Metric
         <Text size="xs" c="dimmed" mt="xs">{t("metrics.perTemplate.help")}</Text>
       </Card>
 
+      {(data.briefings?.length ?? 0) > 0 && (
+        <Card withBorder>
+          <Title order={5}>{t("metrics.briefings.title")}</Title>
+          <Table striped mt="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t("cases.template")}</Table.Th>
+                <Table.Th>{t("metrics.briefings.step")}</Table.Th>
+                <Table.Th>{t("metrics.briefings.version")}</Table.Th>
+                <Table.Th>{t("metrics.briefings.runs")}</Table.Th>
+                <Table.Th>{t("metrics.briefings.decisions")}</Table.Th>
+                <Table.Th>{t("metrics.briefings.approved")}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {data.briefings!.flatMap((b) =>
+                b.versions.map((v, i) => (
+                  <Table.Tr key={`${b.template_id}:${b.step}:${v.prompt_hash}`}>
+                    <Table.Td>{i === 0 && <TemplateName id={b.template_id} title={b.template_title} />}</Table.Td>
+                    <Table.Td>{i === 0 && <Code>{b.step}</Code>}</Table.Td>
+                    <Table.Td>
+                      {v.prompt_hash ? <Code>{v.prompt_hash.slice(0, 8)}</Code> : <Text span size="sm" c="dimmed">{t("metrics.briefings.unversioned")}</Text>}
+                      <Text span size="xs" c="dimmed"> {t("metrics.briefings.since")} {v.first_seen.slice(0, 10)}</Text>
+                      {b.current != null && b.current === v.prompt_hash && b.versions.length > 1 && <Text span size="xs" fw={600}> · {t("metrics.briefings.current")}</Text>}
+                    </Table.Td>
+                    <Table.Td>{v.runs}</Table.Td>
+                    <Table.Td>{v.decisions}</Table.Td>
+                    <Table.Td c={v.approved_share != null && v.approved_share < 0.6 ? "red" : undefined}>
+                      {v.approved_share == null ? "–" : `${formatNumber(v.approved_share * 100, 0)} %`}
+                    </Table.Td>
+                  </Table.Tr>
+                )),
+              )}
+            </Table.Tbody>
+          </Table>
+          <Text size="xs" c="dimmed" mt="xs">{t("metrics.briefings.help")}</Text>
+        </Card>
+      )}
+
       <SimpleGrid cols={{ base: 1, md: 2 }}>
         <Card withBorder>
           <Title order={5}>{t("metrics.gates.title")}</Title>

@@ -2183,6 +2183,12 @@ def build_router(runtime: Runtime) -> APIRouter:
         titles = {d.id: d.meta.get("title", d.id) for d in runtime.engine.definitions.values()}
         for row in data["llm"]["per_template"] + data["cases"]["per_template"] + data["gates"]:
             row["template_title"] = titles.get(row["template_id"])
+        for row in data["briefings"]:
+            row["template_title"] = titles.get(row["template_id"])
+            # Which of the versions is the one loaded now.
+            definition = runtime.engine.definitions.get(row["template_id"])
+            step = definition.steps.get(row["step"]) if definition else None
+            row["current"] = str(step.config.get("prompt_hash") or "") if step else None
         return data
 
     @router.get("/operations")

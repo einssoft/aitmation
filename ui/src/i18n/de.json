@@ -661,6 +661,18 @@
       "count": "Anzahl",
       "none": "Keine Auffälligkeiten im Zeitraum.",
       "help": "Jeder Modellaufruf läuft durch die Guardrails der Instanz (ADR-0038): Injektionsverdacht wird markiert, Geheimnisse, Links und Personendaten werden entfernt, zu grosse Eingaben und Aufrufe über der Kappe verweigert."
+    },
+    "briefings": {
+      "title": "KI-Schritte im Urteil der Freigaben",
+      "step": "Schritt",
+      "version": "Fassung",
+      "since": "seit",
+      "runs": "Läufe",
+      "decisions": "Beurteilt",
+      "approved": "Freigegeben",
+      "current": "aktuell",
+      "unversioned": "ohne Briefing",
+      "help": "Jeder Entscheid an einer Freigabe beurteilt die KI-Schritte davor. Je Fassung des Briefings: sinkt die Quote nach einer Änderung, war die alte Fassung besser."
     }
   },
   "knowledge": {

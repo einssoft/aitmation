@@ -661,6 +661,18 @@
       "count": "Numero",
       "none": "Nessuna anomalia nel periodo.",
       "help": "Ogni chiamata al modello passa dai guardrail dell'istanza (ADR-0038): i sospetti di injection vengono segnalati, segreti, link e dati personali rimossi, input troppo grandi e chiamate oltre il tetto rifiutati."
+    },
+    "briefings": {
+      "title": "Passi IA giudicati alle approvazioni",
+      "step": "Passo",
+      "version": "Versione",
+      "since": "dal",
+      "runs": "Esecuzioni",
+      "decisions": "Giudicati",
+      "approved": "Approvati",
+      "current": "attuale",
+      "unversioned": "senza briefing",
+      "help": "Ogni decisione a un'approvazione giudica i passi IA che la precedono. Per versione del briefing: se la quota cala dopo una modifica, la versione precedente era migliore."
     }
   },
   "knowledge": {

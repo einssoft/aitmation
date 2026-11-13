@@ -661,6 +661,18 @@
       "count": "Nombre",
       "none": "Aucune anomalie sur la période.",
       "help": "Chaque appel de modèle passe par les garde-fous de l'instance (ADR-0038) : les soupçons d'injection sont signalés, les secrets, liens et données personnelles retirés, les entrées trop grandes et les appels au-delà du plafond refusés."
+    },
+    "briefings": {
+      "title": "Étapes IA jugées aux validations",
+      "step": "Étape",
+      "version": "Version",
+      "since": "depuis",
+      "runs": "Exécutions",
+      "decisions": "Jugées",
+      "approved": "Validées",
+      "current": "actuelle",
+      "unversioned": "sans briefing",
+      "help": "Chaque décision à une validation juge les étapes IA qui la précèdent. Par version du briefing : si la part baisse après une modification, l'ancienne version était meilleure."
     }
   },
   "knowledge": {

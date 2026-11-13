@@ -982,6 +982,13 @@ export interface MetricsOverview {
     per_data_class: { data_class: string; calls: number; cost_chf: number }[];
   };
   gates: { template_id: string; template_title?: Multilingual | null; gate: string; decisions: number; approved: number; approved_share: number; outcomes: Record<string, number> }[];
+  briefings?: {
+    template_id: string;
+    template_title?: Multilingual | null;
+    step: string;
+    current?: string | null;
+    versions: { prompt_hash: string; first_seen: string; last_seen: string; runs: number; decisions: number; approved: number; approved_share: number | null; models: string[] }[];
+  }[];
   cases: {
     started: number;
     completed: number;

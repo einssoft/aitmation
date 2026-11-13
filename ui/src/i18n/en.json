@@ -661,6 +661,18 @@
       "count": "Count",
       "none": "Nothing conspicuous in this period.",
       "help": "Every model call runs through the instance's guardrails (ADR-0038): suspected injections are flagged, secrets, links and personal data removed, oversized inputs and calls beyond the cap refused."
+    },
+    "briefings": {
+      "title": "AI steps as judged at the gates",
+      "step": "Step",
+      "version": "Version",
+      "since": "since",
+      "runs": "Runs",
+      "decisions": "Judged",
+      "approved": "Approved",
+      "current": "current",
+      "unversioned": "no briefing",
+      "help": "Every decision at a gate judges the AI steps before it. Per version of the briefing: if the share drops after a change, the earlier version was better."
     }
   },
   "knowledge": {

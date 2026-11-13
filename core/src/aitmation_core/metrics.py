@@ -221,6 +221,78 @@ def gate_figures(
     return result
 
 
+def briefing_figures(
+    conn: sqlite3.Connection, since: str | None, approving: dict[tuple[str, str], set[str]]
+) -> list[dict]:
+    """How people judged the work of each AI step, per version of its
+    prompt. Every decision a person takes at a gate is a verdict on the
+    AI steps that ran before it in the same chain (since the previous
+    gate); counted per ``(template, step, prompt_hash)`` this shows
+    whether a changed briefing is approved more or less often than the
+    one before. Decisions taken by a standing mandate are not verdicts
+    and are left out. Reads the audit log only - no content."""
+    rows = conn.execute(
+        "SELECT COALESCE(c.chain_id, c.id) AS chain, c.template_id, a.at, a.actor_type,"
+        " a.details, a.model_ref FROM audit_log a JOIN cases c ON c.id = a.case_id"
+        f" WHERE a.event = 'step_completed'{' AND a.at >= ?' if since else ''}"
+        " ORDER BY chain, a.at, a.id",
+        (since,) if since else (),
+    ).fetchall()
+    versions: dict[tuple[str, str, str], dict] = {}
+    waiting: list[tuple[str, str, str]] = []  # AI steps not yet judged in this chain
+    chain = None
+    for r in rows:
+        if r["chain"] != chain:
+            chain, waiting = r["chain"], []
+        try:
+            details = json.loads(r["details"] or "{}")
+        except ValueError:
+            continue
+        kind = details.get("kind")
+        if kind == "agent_step":
+            digest = str(details.get("prompt_hash") or "")
+            key = (r["template_id"], str(details.get("step")), digest)
+            bucket = versions.setdefault(
+                key,
+                {"decisions": 0, "approved": 0, "runs": 0, "first_seen": r["at"],
+                 "last_seen": r["at"], "models": set()},
+            )
+            bucket["runs"] += 1
+            bucket["last_seen"] = r["at"]
+            if r["model_ref"]:
+                bucket["models"].add(r["model_ref"])
+            if key not in waiting:
+                waiting.append(key)
+        elif kind == "human_gate":
+            if r["actor_type"] == "human":
+                gate = (r["template_id"], str(details.get("step")))
+                approved = str(details.get("outcome")) in approving.get(gate, {"approved"})
+                for key in waiting:
+                    versions[key]["decisions"] += 1
+                    versions[key]["approved"] += int(approved)
+            waiting = []
+    steps: dict[tuple[str, str], list[dict]] = {}
+    for (template_id, step_id, digest), b in versions.items():
+        steps.setdefault((template_id, step_id), []).append(
+            {
+                "prompt_hash": digest,
+                "first_seen": b["first_seen"],
+                "last_seen": b["last_seen"],
+                "runs": b["runs"],
+                "decisions": b["decisions"],
+                "approved": b["approved"],
+                "approved_share": _round(b["approved"] / b["decisions"], 3)
+                if b["decisions"] else None,
+                "models": sorted(b["models"]),
+            }
+        )
+    result = []
+    for (template_id, step_id), listed in sorted(steps.items()):
+        listed.sort(key=lambda v: v["first_seen"])
+        result.append({"template_id": template_id, "step": step_id, "versions": listed})
+    return result
+
+
 def case_figures(conn: sqlite3.Connection, since: str | None) -> dict:
     where, args = _where(since, "created_at")
     row = conn.execute(
@@ -302,6 +374,7 @@ def overview(
         "since": since,
         "llm": llm_figures(conn, since),
         "gates": gate_figures(conn, since, approving or {}),
+        "briefings": briefing_figures(conn, since, approving or {}),
         "cases": case_figures(conn, since),
         "budget": budget_state(conn, monthly_budget_chf, budget_stop, now),
         "security": security_figures(conn, since),

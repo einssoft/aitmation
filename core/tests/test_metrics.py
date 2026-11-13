@@ -114,6 +114,41 @@ def test_overview_aggregates_costs_gates_and_cases(tmp_path):
         runtime.close()
 
 
+def test_briefing_versions_carry_the_verdicts_of_the_gate(tmp_path):
+    """A person's decision at the gate judges the AI step before it; a new
+    prompt version starts its own count, a mandate's decision counts for none."""
+    runtime, _ = make_runtime(tmp_path)
+    try:
+        work = runtime.engine.definitions["p"].steps["work"]
+
+        def decide_all(outcome):
+            for gate in runtime.open_gates():
+                runtime.decide(gate["case_id"], "review", outcome, actor_id="alex")
+
+        work.config["prompt_hash"] = "v1"
+        run_case(runtime, "a.txt")
+        run_case(runtime, "b.txt")
+        gates = runtime.open_gates()
+        runtime.decide(gates[0]["case_id"], "review", "approved", actor_id="alex")
+        runtime.decide(gates[1]["case_id"], "review", "rejected", actor_id="alex")
+        work.config["prompt_hash"] = "v2"
+        run_case(runtime, "c.txt")
+        decide_all("approved")
+        run_case(runtime, "d.txt")  # ran, not judged yet
+        [step] = metrics.overview(runtime.conn, 30, approving={("p", "review"): {"approved"}})[
+            "briefings"
+        ]
+        assert (step["template_id"], step["step"]) == ("p", "work")
+        first, second = step["versions"]
+        assert (first["prompt_hash"], first["runs"], first["decisions"], first["approved"]) == (
+            "v1", 2, 2, 1)
+        assert first["approved_share"] == 0.5 and first["models"] == ["claude-haiku-4-5"]
+        assert (second["prompt_hash"], second["runs"], second["decisions"]) == ("v2", 2, 1)
+        assert second["approved_share"] == 1.0
+    finally:
+        runtime.close()
+
+
 def test_budget_state_thresholds(tmp_path):
     runtime, _ = make_runtime(tmp_path)
     try:
