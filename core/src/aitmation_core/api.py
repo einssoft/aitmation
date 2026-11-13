@@ -902,7 +902,19 @@ def build_router(runtime: Runtime) -> APIRouter:
             "members": household_members(runtime, request),
             "launcher": launcher_url(runtime, request),
             "auth_required": bool(getattr(request.app.state, "auth_secret", None)),
+            # A hosted instance without launcher: who is signed in (the
+            # platform handed the browser over, /sso) and where to sign in.
+            "principal": _household_principal(request),
+            "login_url": getattr(request.app.state, "login_url", "") or None,
         }
+
+    def _household_principal(request: Request) -> dict | None:
+        session_of = getattr(request.app.state, "session_of", None)
+        principal = session_of(request) if session_of else None
+        if principal is None:
+            return None
+        return {"sub": principal.sub, "role": principal.role,
+                "instances": list(principal.instances), "exp": principal.exp}
 
     # -- model gateway (ADR-0047) -------------------------------------------
 

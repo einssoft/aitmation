@@ -353,7 +353,8 @@
     "changePassword": "Cambia la propria password",
     "currentPassword": "Password attuale",
     "newPassword": "Nuova password (almeno 8 caratteri)",
-    "passwordChanged": "Password modificata."
+    "passwordChanged": "Password modificata.",
+    "switchArea": "Cambia area"
   },
   "chat": {
     "intro": "Chieda a che punto sono le cose — la chat è una via d’ingresso alle viste di questa applicazione, non un chatbot. Le decisioni passano dallo stesso gate di sempre.",

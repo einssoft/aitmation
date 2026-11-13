@@ -353,7 +353,8 @@
     "changePassword": "Eigenes Passwort ändern",
     "currentPassword": "Aktuelles Passwort",
     "newPassword": "Neues Passwort (mindestens 8 Zeichen)",
-    "passwordChanged": "Passwort geändert."
+    "passwordChanged": "Passwort geändert.",
+    "switchArea": "Bereich wechseln"
   },
   "chat": {
     "intro": "Fragen Sie nach Ihrem Stand — der Chat ist ein Eingabeweg zu den Ansichten dieser Anwendung, kein Chatbot. Entscheidungen laufen durch dasselbe Gate wie überall.",

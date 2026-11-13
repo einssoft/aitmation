@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import secrets
+import time
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, HTTPException, Request
@@ -84,6 +85,16 @@ GATEWAY_PREFIX = "/api/v1/gateway"
 
 def _is_hex(value: str) -> bool:
     return len(value) % 2 == 0 and all(c in "0123456789abcdefABCDEF" for c in value)
+
+
+# A sign-on link from the platform lives this long; the session it opens, a working day.
+SSO_LINK_SECONDS = 120
+SESSION_SECONDS = 12 * 3600
+
+
+def _is_shell(path: str) -> bool:
+    """What a browser needs to find out that it has to sign in."""
+    return path in ("/", "/app", "/api/v1/household") or path.startswith("/app/")
 
 
 def _unauthorized(reason: str) -> JSONResponse:
@@ -182,59 +193,86 @@ def create_app(
     )
     app.include_router(build_router(runtime))
 
+    # Two doors, either of which lets a request in:
+    #  - a session token (ADR-0025): a person, signed in at the launcher of
+    #    a household or - for a hosted instance - at the platform, which
+    #    hands the browser over through /sso below;
+    #  - the access key (ADR-0046 §2, ``AITMATION_ACCESS_KEY="name:password"``):
+    #    one shared lock for a container without launcher - Basic auth for a
+    #    browser, ``Authorization: Bearer <password>`` for programs (the
+    #    assistant, the gateway's callers). Not a user model.
     access_key = os.environ.get("AITMATION_ACCESS_KEY", "").strip()
-    if access_key and ":" in access_key:
-        # ADR-0046 §2 / DEPLOYMENT: a container without launcher has no
-        # login page; ``AITMATION_ACCESS_KEY="name:password"`` puts one
-        # shared door in front of everything but /healthz - Basic auth for
-        # a browser, ``Authorization: Bearer <password>`` for programs
-        # (the assistant, the gateway's callers). Not a user model (that
-        # is the launcher's, ADR-0025), a lock on the door.
-        user, _, password = access_key.partition(":")
+    key_user, _, key_password = access_key.partition(":")
+    has_key = bool(access_key and key_password)
+    secret_bytes = (
+        (bytes.fromhex(auth_secret) if _is_hex(auth_secret) else auth_secret.encode())
+        if auth_secret else b""
+    )
+    app.state.login_url = os.environ.get("AITMATION_LOGIN_URL", "").strip()
 
-        def _access_ok(header: str) -> bool:
-            if header.lower().startswith("basic "):
-                try:
-                    given = base64.b64decode(header[6:].strip()).decode()
-                except (ValueError, UnicodeDecodeError):
-                    return False
-                return secrets.compare_digest(given, f"{user}:{password}")
-            if header.lower().startswith("bearer "):
-                return secrets.compare_digest(header[7:].strip(), password)
+    def _access_ok(header: str) -> bool:
+        if not has_key:
             return False
+        if header.lower().startswith("basic "):
+            try:
+                given = base64.b64decode(header[6:].strip()).decode()
+            except (ValueError, UnicodeDecodeError):
+                return False
+            return secrets.compare_digest(given, f"{key_user}:{key_password}")
+        if header.lower().startswith("bearer "):
+            return secrets.compare_digest(header[7:].strip(), key_password)
+        return False
+
+    def _session(request: Request) -> auth.Principal | None:
+        """The signed-in person of this request, if the token is valid and
+        may see this instance."""
+        if not secret_bytes:
+            return None
+        token = auth.token_from_request(request.headers, request.cookies)
+        if token is None:
+            return None
+        try:
+            principal = auth.verify(secret_bytes, token)
+        except auth.AuthError:
+            return None
+        if not principal.may_access(settings.instance_id, settings.instance_type):
+            return None
+        return principal
+
+    app.state.session_of = _session
+
+    if has_key or secret_bytes:
 
         @app.middleware("http")
-        async def require_access_key(request: Request, call_next):
-            if request.url.path == "/healthz" or request.method == "OPTIONS":
+        async def require_door(request: Request, call_next):
+            path = request.url.path
+            if path in ("/healthz", "/sso") or request.method == "OPTIONS":
                 return await call_next(request)
-            if not _access_ok(request.headers.get("authorization", "")):
+            if _access_ok(request.headers.get("authorization", "")):
+                request.state.access_key = True
+                return await call_next(request)
+            principal = _session(request)
+            if principal is not None:
+                request.state.principal = principal
+                return await call_next(request)
+            if has_key and not secret_bytes:
                 return Response(
                     "aitmation: access key required", status_code=401,
                     headers={"WWW-Authenticate": 'Basic realm="aitmation"'},
                 )
-            request.state.access_key = True
-            return await call_next(request)
-
-    if auth_secret:
-        secret_bytes = bytes.fromhex(auth_secret) if _is_hex(auth_secret) else auth_secret.encode()
-
-        @app.middleware("http")
-        async def require_login(request: Request, call_next):
-            """ADR-0025 §4: with a household secret, everything but the
-            public paths needs a valid token whose bearer may see this
-            instance. The principal becomes the audited actor."""
-            path = request.url.path
-            if request.method == "OPTIONS" or _is_public(path):
-                if path.startswith(GATEWAY_PREFIX):
-                    session = auth.token_from_request(request.headers, request.cookies)
-                    if session is not None:
-                        try:
-                            principal = auth.verify(secret_bytes, session)
-                            if principal.may_access(settings.instance_id, settings.instance_type):
-                                request.state.principal = principal
-                        except auth.AuthError:
-                            pass
+            # With sign-in configured the public paths stay open. Behind an
+            # access key only the shell does, and only when a platform
+            # login is known to send the browser to - token-guarded
+            # endpoints (intake, gateway) stay behind the key.
+            if _is_public(path) and not has_key:
                 return await call_next(request)
+            if has_key and app.state.login_url and _is_shell(path):
+                return await call_next(request)
+            if has_key and not app.state.login_url:
+                return Response(
+                    "aitmation: access key required", status_code=401,
+                    headers={"WWW-Authenticate": 'Basic realm="aitmation"'},
+                )
             token = auth.token_from_request(request.headers, request.cookies)
             if token is None:
                 return _unauthorized("not signed in")
@@ -242,10 +280,36 @@ def create_app(
                 principal = auth.verify(secret_bytes, token)
             except auth.AuthError as exc:
                 return _unauthorized(str(exc))
-            if not principal.may_access(settings.instance_id, settings.instance_type):
-                return _forbidden(principal.sub)
-            request.state.principal = principal
-            return await call_next(request)
+            return _forbidden(principal.sub)
+
+    @app.get("/sso")
+    def sso(request: Request, token: str = "", next: str = "/app/") -> Response:
+        """Hand-over from the platform's sign-in (hosted instance): a
+        short-lived token signed with this instance's secret is traded for
+        the session cookie. The link works once per minute it lives; what
+        ends up in the cookie is a fresh token for the same person."""
+        if not secret_bytes:
+            raise HTTPException(404, "sign-in is not configured for this instance")
+        try:
+            principal = auth.verify(secret_bytes, token)
+        except auth.AuthError as exc:
+            raise HTTPException(401, str(exc)) from exc
+        now = int(time.time())
+        if principal.exp - now > SSO_LINK_SECONDS:
+            raise HTTPException(401, "not a sign-on link")
+        if not principal.may_access(settings.instance_id, settings.instance_type):
+            raise HTTPException(403, "this account has no access to this instance")
+        session = auth.sign(
+            secret_bytes,
+            auth.Principal(principal.sub, principal.role, principal.instances,
+                           now + SESSION_SECONDS),
+        )
+        target = next if next.startswith("/app") and "//" not in next else "/app/"
+        response = RedirectResponse(target, status_code=303)
+        secure = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+        response.set_cookie(auth.COOKIE_NAME, session, max_age=SESSION_SECONDS, httponly=True,
+                            samesite="lax", secure=secure, path="/")
+        return response
 
     @app.get("/healthz")
     def healthz() -> dict:

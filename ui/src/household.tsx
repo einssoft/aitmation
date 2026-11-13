@@ -24,6 +24,8 @@ interface Household {
   /** Login state (ADR-0025): required and nobody signed in → the shell shows the login. */
   authRequired: boolean;
   principal: Principal | null;
+  /** Hosted instance: the platform page that signs in, signs out and switches areas. */
+  accountUrl: string | null;
   login: (name: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   launcherClient: LauncherClient | null;
@@ -38,6 +40,7 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authRequired, setAuthRequired] = useState(false);
   const [principal, setPrincipal] = useState<Principal | null>(null);
+  const [accountUrl, setAccountUrl] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -45,6 +48,9 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     let list: Member[];
     let launcherUrl: string | null = null;
     let required = false;
+    // A hosted instance has no launcher: the platform signs people in.
+    let hosted: Principal | null = null;
+    let loginUrl: string | null = null;
     try {
       const hh = await self.household();
       list = hh.members.length ? hh.members : [selfMember()];
@@ -53,6 +59,8 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       list = list.map((m) => (m.id === hh.self ? { ...m, url: window.location.origin } : m));
       launcherUrl = hh.launcher ?? null;
       required = Boolean(hh.auth_required);
+      hosted = hh.principal ?? null;
+      loginUrl = hh.login_url ?? null;
     } catch {
       list = [selfMember()];
     }
@@ -70,7 +78,14 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
           who = null;
         }
       }
+      if (launcherUrl === null) who = hosted;
       setPrincipal(who);
+      setAccountUrl(loginUrl);
+      if (!who && launcherUrl === null && loginUrl) {
+        // Nobody signed in and no login page of our own: the platform has it.
+        window.location.assign(loginUrl);
+        return;
+      }
       if (!who) {
         setMembers(list.map((member) => ({ member, client: new InstanceClient(member), info: null, error: null })));
         setLoading(false);
@@ -114,10 +129,15 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
     [launcher, reload],
   );
   const logout = useCallback(async () => {
+    if (launcher === null && accountUrl) {
+      // Signed in at the platform: it also signs out.
+      window.location.assign(accountUrl);
+      return;
+    }
     if (launcher !== null) await new LauncherClient(launcher).logout().catch(() => undefined);
     setPrincipal(null);
     setMembers((ms) => ms.map((m) => ({ ...m, info: null })));
-  }, [launcher]);
+  }, [launcher, accountUrl]);
 
   const value = useMemo<Household>(() => {
     const reachable = members.filter((m) => m.info !== null);
@@ -132,11 +152,12 @@ export function HouseholdProvider({ children }: { children: ReactNode }) {
       loading,
       authRequired,
       principal,
+      accountUrl,
       login,
       logout,
       launcherClient: launcher !== null ? new LauncherClient(launcher) : null,
     };
-  }, [members, launcher, selected, reload, loading, authRequired, principal, login, logout]);
+  }, [members, launcher, selected, reload, loading, authRequired, principal, accountUrl, login, logout]);
 
   return <HouseholdContext.Provider value={value}>{children}</HouseholdContext.Provider>;
 }

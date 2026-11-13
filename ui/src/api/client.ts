@@ -1124,7 +1124,7 @@ export class InstanceClient {
 
   instance = () => this.call<InstanceInfo>("/instance");
   household = () =>
-    this.call<{ self: string; members: Member[]; launcher: string | null; auth_required?: boolean }>("/household");
+    this.call<{ self: string; members: Member[]; launcher: string | null; auth_required?: boolean; principal?: Principal | null; login_url?: string | null }>("/household");
   gates = () => this.call<Gate[]>("/gates");
   decide = (caseId: string, stepId: string, body: Record<string, unknown>) =>
     this.call<{ ok: true }>(`/cases/${caseId}/steps/${stepId}/decide`, { method: "POST", body: JSON.stringify(body) });

@@ -101,3 +101,52 @@ def test_protected_instance(instance):
     runtime.tick()
     [gate] = client.get("/api/v1/gates").json()
     assert gate["document"]["from"] == "anna" and gate["document"]["source"] == "upload"
+
+
+def test_hosted_instance_takes_a_person_over_from_the_platform(tmp_path, monkeypatch):
+    """A hosted instance has no launcher: an access key locks it for
+    programs, and the platform hands a signed-in person over through
+    /sso. Either door lets a request in; the shell stays loadable so a
+    browser learns where to sign in."""
+    monkeypatch.setenv("AITMATION_ACCESS_KEY", "ops:sehr-geheim")
+    monkeypatch.setenv("AITMATION_LOGIN_URL", "https://platform.example/account")
+    settings = Settings(
+        data_dir=tmp_path / "data", templates_dir=CORE_TEMPLATES, apps_dir=APPS,
+        instance_id="firma-x", instance_title="Firma X", instance_type="company",
+    )
+    app = create_app(Runtime(settings), model_factory=lambda s: None, auth_secret=SECRET)
+    with TestClient(app, follow_redirects=False) as client:
+        # Nobody signed in: the shell's first question is answered, the rest is not.
+        hh = client.get("/api/v1/household").json()
+        assert hh["principal"] is None and hh["login_url"] == "https://platform.example/account"
+        assert client.get("/api/v1/apps").status_code == 401
+        # Token-guarded endpoints stay behind the key.
+        assert client.get("/api/v1/gateway/models").status_code == 401
+        # A program with the key gets in as before.
+        key = {"authorization": "Bearer sehr-geheim"}
+        assert client.get("/api/v1/apps", headers=key).status_code == 200
+        # A session-length token is not a sign-on link; a wrong signature is nothing.
+        long_lived = _token("alex", "admin", ttl=3600)
+        assert client.get("/sso", params={"token": long_lived}).status_code == 401
+        assert client.get("/sso", params={"token": "v1.x.y"}).status_code == 401
+        # Someone without access to this instance is turned away.
+        assert client.get("/sso", params={"token": _token("anna")}).status_code == 403
+        # The hand-over: a short link becomes the session cookie.
+        r = client.get("/sso", params={"token": _token("alex", "admin", ("firma-x",)),
+                                       "next": "https://evil.example/"})
+        assert r.status_code == 303 and r.headers["location"] == "/app/"
+        assert auth.COOKIE_NAME in r.cookies
+        assert client.get("/api/v1/apps").status_code == 200
+        who = client.get("/api/v1/household").json()["principal"]
+        assert who["sub"] == "alex" and who["role"] == "admin"
+        assert who["exp"] > time.time() + 3600  # a session, not the link's minute
+
+
+def test_access_key_alone_still_challenges_a_browser(tmp_path, monkeypatch):
+    monkeypatch.setenv("AITMATION_ACCESS_KEY", "ops:sehr-geheim")
+    settings = Settings(data_dir=tmp_path / "data", templates_dir=CORE_TEMPLATES, apps_dir=APPS)
+    app = create_app(Runtime(settings), model_factory=lambda s: None)
+    with TestClient(app) as client:
+        r = client.get("/api/v1/household")
+        assert r.status_code == 401 and r.headers["www-authenticate"].startswith("Basic")
+        assert client.get("/sso", params={"token": "x"}).status_code == 404

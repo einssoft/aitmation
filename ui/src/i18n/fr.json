@@ -353,7 +353,8 @@
     "changePassword": "Changer son mot de passe",
     "currentPassword": "Mot de passe actuel",
     "newPassword": "Nouveau mot de passe (8 caractères au moins)",
-    "passwordChanged": "Mot de passe modifié."
+    "passwordChanged": "Mot de passe modifié.",
+    "switchArea": "Changer d'espace"
   },
   "chat": {
     "intro": "Demandez où en sont les choses — le chat est une voie d’entrée vers les vues de cette application, pas un chatbot. Les décisions passent par le même gate que partout ailleurs.",

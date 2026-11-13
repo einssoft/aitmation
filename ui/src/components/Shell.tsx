@@ -45,6 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
     select,
     authRequired,
     principal,
+    accountUrl,
     logout,
     loading,
   } = useHousehold();
@@ -74,6 +75,11 @@ export function Shell({ children }: { children: ReactNode }) {
           {t("app.loading")}
         </Text>
       );
+    if (accountUrl) {
+      // The session ended and the platform holds the login.
+      window.location.assign(accountUrl);
+      return null;
+    }
     return <LoginPage />;
   }
 
@@ -162,6 +168,11 @@ export function Shell({ children }: { children: ReactNode }) {
             {principal && (
               <Group gap={6}>
                 <Text size="sm">{principal.sub}</Text>
+                {accountUrl && (
+                  <Button size="compact-xs" variant="subtle" component="a" href={accountUrl}>
+                    {t("auth.switchArea")}
+                  </Button>
+                )}
                 <Button
                   size="compact-xs"
                   variant="subtle"
