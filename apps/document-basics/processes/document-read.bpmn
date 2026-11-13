@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:aimn="https://aitmation.com/schema/aimn/1" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="defs_document-read" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="document-read" name="Dokument lesen" isExecutable="true" aimn:version="1">
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Dokument lesen</aimn:title>
+        <aimn:title lang="fr">Lire le document</aimn:title>
+        <aimn:title lang="it">Leggere il documento</aimn:title>
+        <aimn:title lang="en">Read document</aimn:title>
+        <aimn:description lang="de">Nimmt ein Dokument entgegen, extrahiert den Text und fasst ihn zusammen.</aimn:description>
+        <aimn:description lang="fr">Reçoit un document, en extrait le texte et le résume.</aimn:description>
+        <aimn:description lang="it">Riceve un documento, ne estrae il testo e lo riassume.</aimn:description>
+        <aimn:description lang="en">Takes in a document, extracts the text and summarizes it.</aimn:description>
+      </aimn:meta>
+      <aimn:parameter name="document_type" default="generic" description="Referenz auf eine Dokumenttyp-Definition" />
+      <aimn:contract>
+        <aimn:input name="file">Pfad zum Dokument im Case-Store</aimn:input>
+        <aimn:output name="summary">kurze Zusammenfassung des Inhalts</aimn:output>
+        <aimn:output name="anomalies">Liste von Auffälligkeiten, darf leer sein</aimn:output>
+      </aimn:contract>
+      <aimn:policy name="privacy">
+        <aimn:property name="category" value="internal" />
+      </aimn:policy>
+      <aimn:policy name="model">
+        <aimn:property name="confidence_threshold" value="0.5" />
+      </aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="intake">
+      <bpmn:extensionElements>
+        <aimn:trigger source="chain" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>intake</bpmn:documentation>
+    </bpmn:startEvent>
+    <bpmn:task id="read" name="read">
+      <bpmn:extensionElements>
+        <aimn:aiTask ref="read" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>read</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="flow_intake_fired" name="fired" sourceRef="intake" targetRef="read" />
+    <bpmn:endEvent id="to_document_review">
+      <bpmn:extensionElements>
+        <aimn:chainTo process="document-review" />
+      </bpmn:extensionElements>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="flow_read_done" name="done" sourceRef="read" targetRef="to_document_review" />
+    <bpmn:endEvent id="finished" />
+    <bpmn:sequenceFlow id="flow_read_failed" name="failed" sourceRef="read" targetRef="finished" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram_document-read">
+    <bpmndi:BPMNPlane id="plane_document-read" bpmnElement="document-read">
+      <bpmndi:BPMNShape id="shape_intake" bpmnElement="intake">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_read" bpmnElement="read">
+        <dc:Bounds x="360" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_to_document_review" bpmnElement="to_document_review">
+        <dc:Bounds x="560" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finished" bpmnElement="finished">
+        <dc:Bounds x="560" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_intake_fired" bpmnElement="flow_intake_fired">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="360" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_read_done" bpmnElement="flow_read_done">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_read_failed" bpmnElement="flow_read_failed">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

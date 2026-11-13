@@ -1,0 +1,19 @@
+[[case]]
+id = "review-waits-for-a-person"
+description = "Die Prüfung ist ein Gate: ohne Entscheidung wartet der Vorgang, mit Freigabe geht er in die Archivierung."
+given = { trigger = { source = "chain", trigger = { source = "test", original_name = "x.txt" }, outputs = { read = { summary = "Testbeleg." } } } }
+
+[case.expect]
+status = "running"
+waiting_at = "review"
+gates = ["review"]
+
+[[case]]
+id = "approval-chains-into-archive"
+given = { trigger = { source = "chain", trigger = { source = "test", original_name = "x.txt" }, outputs = { read = { summary = "Testbeleg." } } } }
+decisions = { review = "approved" }
+
+[case.expect]
+status = "completed"
+outcomes = { review = "approved" }
+chain = ["document-archive"]

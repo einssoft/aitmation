@@ -1,0 +1,97 @@
+# Kontakte - Kunden, Lieferanten, Behörden, Banken - als Sammlung
+# (ADR-0026, Erweiterung 2026-09-03). Wer uns Post schickt und wem wir
+# schreiben; der Abgleich von Belegen und die Korrespondenz lesen hier.
+
+id = "contacts"
+title = { de = "Kontakte", fr = "Contacts", it = "Contatti", en = "Contacts" }
+description = { de = "Kunden, Lieferanten, Behörden und Banken mit Adresse, Kennungen und Bankverbindung. Vorlagen sehen die Liste nur auf ausdrückliche Anforderung.", fr = "Clients, fournisseurs, autorités et banques avec adresse, identifiants et coordonnées bancaires. Les modèles ne voient la liste que sur demande explicite.", it = "Clienti, fornitori, autorità e banche con indirizzo, identificativi e coordinate bancarie. I modelli vedono l'elenco solo su richiesta esplicita.", en = "Customers, suppliers, authorities and banks with address, identifiers and bank details. Templates see the list only on explicit request." }
+scope = "any"
+kind = "collection"
+label_field = "name"
+search_fields = ["name", "city", "email", "vat_number", "our_number"]
+
+[fields.name]
+type = "text"
+required = true
+group = "identity"
+label = { de = "Name", fr = "Nom", it = "Nome", en = "Name" }
+
+[fields.kind]
+type = "choice"
+required = true
+group = "identity"
+default = "supplier"
+label = { de = "Art", fr = "Type", it = "Tipo", en = "Kind" }
+choices = [
+  { value = "customer", label = { de = "Kunde", fr = "Client", it = "Cliente", en = "Customer" } },
+  { value = "supplier", label = { de = "Lieferant", fr = "Fournisseur", it = "Fornitore", en = "Supplier" } },
+  { value = "authority", label = { de = "Behörde", fr = "Autorité", it = "Autorità", en = "Authority" } },
+  { value = "bank", label = { de = "Bank", fr = "Banque", it = "Banca", en = "Bank" } },
+  { value = "insurance", label = { de = "Versicherung", fr = "Assurance", it = "Assicurazione", en = "Insurance" } },
+  { value = "other", label = { de = "Andere", fr = "Autre", it = "Altro", en = "Other" } },
+]
+
+[fields.contact_person]
+type = "text"
+group = "identity"
+label = { de = "Ansprechperson", fr = "Personne de contact", it = "Persona di contatto", en = "Contact person" }
+
+[fields.street]
+type = "text"
+group = "address"
+label = { de = "Strasse und Nummer", fr = "Rue et numéro", it = "Via e numero", en = "Street and number" }
+
+[fields.postal_code]
+type = "text"
+group = "address"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[fields.city]
+type = "text"
+group = "address"
+label = { de = "Ort", fr = "Localité", it = "Località", en = "City" }
+
+[fields.country]
+type = "choice"
+group = "address"
+default = "CH"
+label = { de = "Land", fr = "Pays", it = "Paese", en = "Country" }
+choices = [
+  { value = "CH", label = { de = "Schweiz", fr = "Suisse", it = "Svizzera", en = "Switzerland" } },
+  { value = "DE", label = { de = "Deutschland", fr = "Allemagne", it = "Germania", en = "Germany" } },
+  { value = "AT", label = { de = "Österreich", fr = "Autriche", it = "Austria", en = "Austria" } },
+  { value = "LI", label = { de = "Liechtenstein", fr = "Liechtenstein", it = "Liechtenstein", en = "Liechtenstein" } },
+  { value = "other", label = { de = "Anderes", fr = "Autre", it = "Altro", en = "Other" } },
+]
+
+[fields.email]
+type = "email"
+group = "contact"
+label = { de = "E-Mail", fr = "E-mail", it = "E-mail", en = "E-mail" }
+
+[fields.phone]
+type = "text"
+group = "contact"
+label = { de = "Telefon", fr = "Téléphone", it = "Telefono", en = "Phone" }
+
+[fields.vat_number]
+type = "text"
+group = "tax"
+label = { de = "UID / USt-IdNr.", fr = "IDE / n° TVA", it = "IDI / partita IVA", en = "UID / VAT ID" }
+example = "CHE-123.456.789 MWST"
+
+[fields.our_number]
+type = "text"
+group = "tax"
+label = { de = "Unsere Nummer bei ihnen", fr = "Notre numéro chez eux", it = "Il nostro numero presso di loro", en = "Our number with them" }
+help = { de = "Kunden- oder Lieferantennummer, die auf deren Belegen steht.", fr = "Numéro de client ou de fournisseur figurant sur leurs documents.", it = "Numero cliente o fornitore riportato sui loro documenti.", en = "Customer or supplier number printed on their documents." }
+
+[fields.iban]
+type = "text"
+group = "bank"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }
+
+[fields.notes]
+type = "text"
+group = "bank"
+label = { de = "Bemerkungen", fr = "Remarques", it = "Osservazioni", en = "Notes" }

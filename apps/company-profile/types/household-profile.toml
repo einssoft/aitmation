@@ -1,0 +1,86 @@
+# Haushaltsprofil - das Gegenstück zum Firmenprofil für private Mandanten
+# (ADR-0024): wer der Haushalt ist, wo er wohnt, in welcher Sprache er
+# Post erhält. Bewusst schmal; Personen bleiben draussen.
+
+id = "household-profile"
+title = { de = "Haushaltsprofil", fr = "Profil du ménage", it = "Profilo del nucleo familiare", en = "Household profile" }
+description = { de = "Name, Adresse und Sprache des Haushalts. Vorlagen sehen diese Angaben nur auf ausdrückliche Anforderung.", fr = "Nom, adresse et langue du ménage. Les modèles ne voient ces données que sur demande explicite.", it = "Nome, indirizzo e lingua del nucleo familiare. I modelli vedono questi dati solo su richiesta esplicita.", en = "Name, address and language of the household. Templates see these details only on explicit request." }
+scope = "private"
+variant_field = "country"
+
+[fields.name]
+type = "text"
+required = true
+group = "identity"
+label = { de = "Name des Haushalts", fr = "Nom du ménage", it = "Nome del nucleo familiare", en = "Household name" }
+help = { de = "Zum Beispiel der Familienname, wie er auf dem Briefkasten steht.", fr = "Par exemple le nom de famille tel qu'il figure sur la boîte aux lettres.", it = "Per esempio il cognome come appare sulla cassetta delle lettere.", en = "For example the family name as it appears on the letterbox." }
+
+[fields.country]
+type = "choice"
+required = true
+group = "identity"
+label = { de = "Land", fr = "Pays", it = "Paese", en = "Country" }
+choices = [
+  { value = "CH", label = { de = "Schweiz", fr = "Suisse", it = "Svizzera", en = "Switzerland" } },
+  { value = "DE", label = { de = "Deutschland", fr = "Allemagne", it = "Germania", en = "Germany" } },
+  { value = "AT", label = { de = "Österreich", fr = "Autriche", it = "Austria", en = "Austria" } },
+]
+
+[fields.street]
+type = "text"
+group = "address"
+label = { de = "Strasse und Nummer", fr = "Rue et numéro", it = "Via e numero", en = "Street and number" }
+
+[fields.postal_code]
+type = "text"
+group = "address"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[fields.city]
+type = "text"
+group = "address"
+label = { de = "Ort", fr = "Localité", it = "Località", en = "City" }
+
+[fields.email]
+type = "email"
+group = "contact"
+label = { de = "E-Mail", fr = "E-mail", it = "E-mail", en = "E-mail" }
+
+[fields.language]
+type = "choice"
+group = "contact"
+default = "de"
+label = { de = "Korrespondenzsprache", fr = "Langue de correspondance", it = "Lingua di corrispondenza", en = "Correspondence language" }
+choices = [
+  { value = "de", label = { de = "Deutsch", fr = "Allemand", it = "Tedesco", en = "German" } },
+  { value = "fr", label = { de = "Französisch", fr = "Français", it = "Francese", en = "French" } },
+  { value = "it", label = { de = "Italienisch", fr = "Italien", it = "Italiano", en = "Italian" } },
+  { value = "en", label = { de = "Englisch", fr = "Anglais", it = "Inglese", en = "English" } },
+]
+
+[variants.CH.postal_code]
+type = "text"
+group = "address"
+pattern = "\\d{4}"
+example = "3000"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[variants.CH.canton]
+type = "choice"
+group = "address"
+label = { de = "Kanton", fr = "Canton", it = "Cantone", en = "Canton" }
+choices = ["AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL", "GR", "JU", "LU", "NE", "NW", "OW", "SG", "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH"]
+
+[variants.DE.postal_code]
+type = "text"
+group = "address"
+pattern = "\\d{5}"
+example = "10115"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[variants.AT.postal_code]
+type = "text"
+group = "address"
+pattern = "\\d{4}"
+example = "1010"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }

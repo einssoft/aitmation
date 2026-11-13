@@ -1,0 +1,22 @@
+# Illustratives Beispiel (ADR-0018: kein Roadmap-Inhalt) für ADR-0034/0035:
+# ein Prozess mit DMN-Entscheid, AI-Task, Gate, Werkzeug mit Stub und Aufruf
+# eines Teilprozesses. Zum Ausprobieren nach <data>/apps/ kopieren.
+format = 2
+id = "demo-triage"
+version = "0.1.0"
+name = { de = "Demo: Triage mit Entscheidungstabelle", fr = "Démo : triage par table de décision", it = "Demo: triage con tabella decisionale", en = "Demo: triage with a decision table" }
+description = { de = "Zeigt BPMN + DMN + AIMN zusammen: lesen, entscheiden, freigeben, melden, archivieren.", fr = "Montre BPMN + DMN + AIMN ensemble.", it = "Mostra BPMN + DMN + AIMN insieme.", en = "Shows BPMN + DMN + AIMN together: read, decide, approve, notify, archive." }
+license = "proprietary"
+
+[author]
+name = "aitmation"
+
+[requires]
+core = "0.0.1"
+data_class = "internal"
+
+[model_roles.extractor]
+structured_output = true
+vision = false
+max_data_class = "internal"
+description = { de = "Liest Betrag und Auffälligkeiten aus dem Dokument.", fr = "Lit le montant et les anomalies.", it = "Legge importo e anomalie.", en = "Reads amount and anomalies from the document." }

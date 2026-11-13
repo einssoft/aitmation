@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="defs_sender" name="Absender" namespace="https://aitmation.com/solutions">
+  <decision id="sender" name="Absender bekannt?">
+    <description>Illustrativ: bekannte Absender aus dem Umschlag, alles andere ist unbekannt. Läuft parallel zur Extraktion (ADR-0037).</description>
+    <decisionTable id="sender_table" hitPolicy="FIRST">
+      <input id="i_sender" label="Absender"><inputExpression typeRef="string"><text>trigger.sender</text></inputExpression></input>
+      <output id="o_outcome" name="outcome" typeRef="string"/>
+      <output id="o_trust" name="trust" typeRef="string"/>
+      <rule id="r_known"><inputEntry><text>"muster-malerbedarf", "ag-wartung"</text></inputEntry><outputEntry><text>"known"</text></outputEntry><outputEntry><text>"supplier on file"</text></outputEntry></rule>
+      <rule id="r_unknown"><inputEntry><text>-</text></inputEntry><outputEntry><text>"unknown"</text></outputEntry><outputEntry><text>"not on file"</text></outputEntry></rule>
+    </decisionTable>
+  </decision>
+</definitions>

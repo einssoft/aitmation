@@ -1,0 +1,21 @@
+[[case]]
+id = "small-and-clean-archives"
+[case.given.inputs]
+steps = { extract = { total = 48, anomaly_count = 0 } }
+[case.expect.outputs]
+outcome = "archive"
+
+[[case]]
+id = "large-amount-reviews"
+[case.given.inputs]
+steps = { extract = { total = 13404.4, anomaly_count = 0 } }
+[case.expect.outputs]
+outcome = "review"
+reason = "amount needs a person"
+
+[[case]]
+id = "anomalies-review"
+[case.given.inputs]
+steps = { extract = { total = 20, anomaly_count = 2 } }
+[case.expect.outputs]
+outcome = "review"

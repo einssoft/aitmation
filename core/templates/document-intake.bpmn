@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:aimn="https://aitmation.com/schema/aimn/1" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="defs_document-intake" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="document-intake" name="Dokument-Eingang" isExecutable="true" aimn:version="1">
+    <bpmn:documentation>Generic intake (docs/AGENTIK.md): every inbox document enters here.
+An agent judges the document type ("classify"); routing is deterministic -
+the dispatch action reads the recognized type's declared chain, never the
+model. Unknown or uncertain documents are sorted out to a human gate for
+manual categorization; that gate is how the system grows new categories.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Dokument-Eingang</aimn:title>
+        <aimn:description lang="de">Nimmt jedes Dokument entgegen, bestimmt den Typ und startet die passende Kette.</aimn:description>
+      </aimn:meta>
+      <aimn:policy name="privacy">
+        <aimn:property name="category" value="internal" />
+      </aimn:policy>
+      <aimn:policy name="model">
+        <aimn:property name="confidence_threshold" value="0.7" />
+      </aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="intake">
+      <bpmn:extensionElements>
+        <aimn:trigger source="folder" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>intake</bpmn:documentation>
+    </bpmn:startEvent>
+    <bpmn:task id="classify" name="classify">
+      <bpmn:extensionElements>
+        <aimn:aiTask>
+          <aimn:output name="category">id of the matching document type, or 'unknown'</aimn:output>
+          <aimn:property name="classify" value="true" />
+          <aimn:property name="read_document" value="true" />
+        </aimn:aiTask>
+      </bpmn:extensionElements>
+      <bpmn:documentation>classify</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:userTask id="categorize" name="categorize">
+      <bpmn:extensionElements>
+        <aimn:gate>
+          <aimn:property name="categorization" value="true" />
+        </aimn:gate>
+      </bpmn:extensionElements>
+      <bpmn:documentation>categorize</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="dispatch" name="dispatch">
+      <bpmn:extensionElements>
+        <aimn:toolCall action="dispatch" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>dispatch</bpmn:documentation>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_intake_fired" name="fired" sourceRef="intake" targetRef="classify" />
+    <bpmn:sequenceFlow id="flow_classify_recognized" name="recognized" sourceRef="classify" targetRef="dispatch" />
+    <bpmn:sequenceFlow id="flow_classify_unknown" name="unknown" sourceRef="classify" targetRef="categorize" />
+    <bpmn:sequenceFlow id="flow_classify_failed" name="failed" sourceRef="classify" targetRef="categorize" />
+    <bpmn:sequenceFlow id="flow_categorize_assigned" name="assigned" sourceRef="categorize" targetRef="dispatch" />
+    <bpmn:endEvent id="finished" />
+    <bpmn:sequenceFlow id="flow_categorize_discarded" name="discarded" sourceRef="categorize" targetRef="finished" />
+    <bpmn:sequenceFlow id="flow_dispatch_done" name="done" sourceRef="dispatch" targetRef="finished" />
+    <bpmn:sequenceFlow id="flow_dispatch_failed" name="failed" sourceRef="dispatch" targetRef="finished" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram_document-intake">
+    <bpmndi:BPMNPlane id="plane_document-intake" bpmnElement="document-intake">
+      <bpmndi:BPMNShape id="shape_intake" bpmnElement="intake">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_classify" bpmnElement="classify">
+        <dc:Bounds x="360" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_dispatch" bpmnElement="dispatch">
+        <dc:Bounds x="560" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_categorize" bpmnElement="categorize">
+        <dc:Bounds x="560" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finished" bpmnElement="finished">
+        <dc:Bounds x="760" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_intake_fired" bpmnElement="flow_intake_fired">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="360" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_classify_recognized" bpmnElement="flow_classify_recognized">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_classify_unknown" bpmnElement="flow_classify_unknown">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_classify_failed" bpmnElement="flow_classify_failed">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_categorize_assigned" bpmnElement="flow_categorize_assigned">
+        <di:waypoint x="660" y="290" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_categorize_discarded" bpmnElement="flow_categorize_discarded">
+        <di:waypoint x="660" y="290" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_dispatch_done" bpmnElement="flow_dispatch_done">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_dispatch_failed" bpmnElement="flow_dispatch_failed">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,323 @@
+# Firmenprofil - ein Datensatz, drei Länder-Varianten (ADR-0026).
+# Gemeinsame Felder oben; je Land kommen Kennungen, Register und Formate
+# dazu oder überschreiben ein gemeinsames Feld (Rechtsform, PLZ, IBAN).
+
+id = "company-profile"
+title = { de = "Firmenprofil", fr = "Profil d'entreprise", it = "Profilo aziendale", en = "Company profile" }
+description = { de = "Wer die Firma ist: Name, Sitz, Rechtsform, Kennungen und Bankverbindung. Vorlagen sehen diese Angaben nur, wenn sie sie ausdrücklich anfordern.", fr = "Qui est l'entreprise : nom, siège, forme juridique, identifiants et coordonnées bancaires. Les modèles ne voient ces données que s'ils les demandent explicitement.", it = "Chi è l'azienda: nome, sede, forma giuridica, identificativi e coordinate bancarie. I modelli vedono questi dati solo se li richiedono esplicitamente.", en = "Who the company is: name, seat, legal form, identifiers and bank details. Templates see these details only when they explicitly ask for them." }
+scope = "company"
+variant_field = "country"
+
+[fields.name]
+type = "text"
+required = true
+group = "identity"
+label = { de = "Firmenname", fr = "Raison sociale", it = "Ragione sociale", en = "Company name" }
+help = { de = "So, wie die Firma im Register bzw. auf Rechnungen erscheint.", fr = "Tel qu'il figure au registre ou sur les factures.", it = "Come appare nel registro o sulle fatture.", en = "As it appears in the register or on invoices." }
+
+[fields.country]
+type = "choice"
+required = true
+group = "identity"
+label = { de = "Land", fr = "Pays", it = "Paese", en = "Country" }
+help = { de = "Bestimmt Kennungen, Register und Formate der weiteren Felder.", fr = "Détermine les identifiants, registres et formats des autres champs.", it = "Determina identificativi, registri e formati degli altri campi.", en = "Determines identifiers, registers and formats of the remaining fields." }
+choices = [
+  { value = "CH", label = { de = "Schweiz", fr = "Suisse", it = "Svizzera", en = "Switzerland" } },
+  { value = "DE", label = { de = "Deutschland", fr = "Allemagne", it = "Germania", en = "Germany" } },
+  { value = "AT", label = { de = "Österreich", fr = "Autriche", it = "Austria", en = "Austria" } },
+]
+
+[fields.legal_form]
+type = "text"
+group = "identity"
+label = { de = "Rechtsform", fr = "Forme juridique", it = "Forma giuridica", en = "Legal form" }
+
+[fields.street]
+type = "text"
+required = true
+group = "address"
+label = { de = "Strasse und Nummer", fr = "Rue et numéro", it = "Via e numero", en = "Street and number" }
+
+[fields.postal_code]
+type = "text"
+required = true
+group = "address"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[fields.city]
+type = "text"
+required = true
+group = "address"
+label = { de = "Ort", fr = "Localité", it = "Località", en = "City" }
+
+[fields.email]
+type = "email"
+group = "contact"
+label = { de = "E-Mail", fr = "E-mail", it = "E-mail", en = "E-mail" }
+
+[fields.phone]
+type = "text"
+group = "contact"
+label = { de = "Telefon", fr = "Téléphone", it = "Telefono", en = "Phone" }
+
+[fields.website]
+type = "text"
+group = "contact"
+label = { de = "Webseite", fr = "Site web", it = "Sito web", en = "Website" }
+
+[fields.contact_person]
+type = "text"
+group = "contact"
+label = { de = "Ansprechperson", fr = "Personne de contact", it = "Persona di contatto", en = "Contact person" }
+
+[fields.language]
+type = "choice"
+group = "contact"
+default = "de"
+label = { de = "Korrespondenzsprache", fr = "Langue de correspondance", it = "Lingua di corrispondenza", en = "Correspondence language" }
+choices = [
+  { value = "de", label = { de = "Deutsch", fr = "Allemand", it = "Tedesco", en = "German" } },
+  { value = "fr", label = { de = "Französisch", fr = "Français", it = "Francese", en = "French" } },
+  { value = "it", label = { de = "Italienisch", fr = "Italien", it = "Italiano", en = "Italian" } },
+  { value = "en", label = { de = "Englisch", fr = "Anglais", it = "Inglese", en = "English" } },
+]
+
+[fields.vat_registered]
+type = "bool"
+group = "tax"
+label = { de = "Mehrwertsteuerpflichtig", fr = "Assujetti à la TVA", it = "Soggetto all'IVA", en = "VAT registered" }
+
+[fields.vat_number]
+type = "text"
+group = "tax"
+label = { de = "MWST-Nummer", fr = "Numéro de TVA", it = "Numero IVA", en = "VAT number" }
+
+[fields.iban]
+type = "text"
+group = "bank"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }
+
+[fields.bank_name]
+type = "text"
+group = "bank"
+label = { de = "Bank", fr = "Banque", it = "Banca", en = "Bank" }
+
+# -- Schweiz -----------------------------------------------------------------
+
+[variants.CH.legal_form]
+type = "choice"
+group = "identity"
+label = { de = "Rechtsform", fr = "Forme juridique", it = "Forma giuridica", en = "Legal form" }
+choices = [
+  { value = "sole_proprietorship", label = { de = "Einzelunternehmen", fr = "Entreprise individuelle", it = "Ditta individuale", en = "Sole proprietorship" } },
+  { value = "general_partnership", label = { de = "Kollektivgesellschaft", fr = "Société en nom collectif", it = "Società in nome collettivo", en = "General partnership" } },
+  { value = "limited_partnership", label = { de = "Kommanditgesellschaft", fr = "Société en commandite", it = "Società in accomandita", en = "Limited partnership" } },
+  { value = "gmbh", label = { de = "GmbH", fr = "Sàrl", it = "Sagl", en = "GmbH (LLC)" } },
+  { value = "ag", label = { de = "AG", fr = "SA", it = "SA", en = "AG (Ltd.)" } },
+  { value = "cooperative", label = { de = "Genossenschaft", fr = "Société coopérative", it = "Società cooperativa", en = "Cooperative" } },
+  { value = "association", label = { de = "Verein", fr = "Association", it = "Associazione", en = "Association" } },
+  { value = "foundation", label = { de = "Stiftung", fr = "Fondation", it = "Fondazione", en = "Foundation" } },
+]
+
+[variants.CH.uid]
+type = "text"
+group = "identity"
+pattern = "CHE-\\d{3}\\.\\d{3}\\.\\d{3}"
+example = "CHE-123.456.789"
+label = { de = "UID (Unternehmens-Identifikationsnummer)", fr = "IDE (numéro d'identification des entreprises)", it = "IDI (numero d'identificazione delle imprese)", en = "UID (business identification number)" }
+help = { de = "Format CHE-123.456.789; im UID-Register (uid.admin.ch) nachschlagbar.", fr = "Format CHE-123.456.789 ; consultable dans le registre IDE (uid.admin.ch).", it = "Formato CHE-123.456.789; consultabile nel registro IDI (uid.admin.ch).", en = "Format CHE-123.456.789; searchable in the UID register (uid.admin.ch)." }
+
+[variants.CH.canton]
+type = "choice"
+group = "address"
+label = { de = "Kanton", fr = "Canton", it = "Cantone", en = "Canton" }
+choices = ["AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL", "GR", "JU", "LU", "NE", "NW", "OW", "SG", "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH"]
+
+[variants.CH.postal_code]
+type = "text"
+required = true
+group = "address"
+pattern = "\\d{4}"
+example = "8001"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[variants.CH.vat_number]
+type = "text"
+group = "tax"
+pattern = "CHE-\\d{3}\\.\\d{3}\\.\\d{3} ?(MWST|TVA|IVA)"
+example = "CHE-123.456.789 MWST"
+label = { de = "MWST-Nummer", fr = "Numéro de TVA", it = "Numero IVA", en = "VAT number" }
+help = { de = "UID mit Zusatz MWST (Normalsätze 2024: 8.1 % / 2.6 % / 3.8 %).", fr = "IDE avec le suffixe TVA (taux 2024 : 8,1 % / 2,6 % / 3,8 %).", it = "IDI con il suffisso IVA (aliquote 2024: 8,1 % / 2,6 % / 3,8 %).", en = "UID with the suffix MWST/TVA/IVA (2024 rates: 8.1% / 2.6% / 3.8%)." }
+
+[variants.CH.iban]
+type = "text"
+group = "bank"
+pattern = "CH\\d{2}(?: ?[0-9A-Z]{4}){4} ?[0-9A-Z]"
+example = "CH93 0076 2011 6238 5295 7"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }
+
+[variants.CH.qr_iban]
+type = "text"
+group = "bank"
+pattern = "CH\\d{2} ?3[01]\\d{2}(?: ?[0-9A-Z]{4}){3} ?[0-9A-Z]"
+example = "CH44 3199 9123 0008 8901 2"
+label = { de = "QR-IBAN (für QR-Rechnungen mit Referenz)", fr = "QR-IBAN (pour QR-factures avec référence)", it = "QR-IBAN (per QR-fatture con riferimento)", en = "QR-IBAN (for QR bills with reference)" }
+
+# -- Deutschland -------------------------------------------------------------
+
+[variants.DE.legal_form]
+type = "choice"
+group = "identity"
+label = { de = "Rechtsform", fr = "Forme juridique", it = "Forma giuridica", en = "Legal form" }
+choices = [
+  { value = "sole_proprietorship", label = { de = "Einzelunternehmen", fr = "Entreprise individuelle", it = "Ditta individuale", en = "Sole proprietorship" } },
+  { value = "freelancer", label = { de = "Freiberufler", fr = "Profession libérale", it = "Libero professionista", en = "Freelancer" } },
+  { value = "gbr", label = { de = "GbR", fr = "GbR (société civile)", it = "GbR (società semplice)", en = "GbR (civil-law partnership)" } },
+  { value = "ohg", label = { de = "OHG", fr = "OHG (société en nom collectif)", it = "OHG (società in nome collettivo)", en = "OHG (general partnership)" } },
+  { value = "kg", label = { de = "KG", fr = "KG (société en commandite)", it = "KG (società in accomandita)", en = "KG (limited partnership)" } },
+  { value = "gmbh", label = { de = "GmbH", fr = "GmbH", it = "GmbH", en = "GmbH (LLC)" } },
+  { value = "ug", label = { de = "UG (haftungsbeschränkt)", fr = "UG (à responsabilité limitée)", it = "UG (a responsabilità limitata)", en = "UG (limited liability)" } },
+  { value = "ag", label = { de = "AG", fr = "AG (société anonyme)", it = "AG (società per azioni)", en = "AG (stock corporation)" } },
+  { value = "ev", label = { de = "e. V.", fr = "e. V. (association)", it = "e. V. (associazione)", en = "e. V. (registered association)" } },
+  { value = "eg", label = { de = "eG", fr = "eG (coopérative)", it = "eG (cooperativa)", en = "eG (cooperative)" } },
+]
+
+[variants.DE.register_number]
+type = "text"
+group = "identity"
+pattern = "HR[AB] ?\\d+( ?[A-Z]{1,2})?"
+example = "HRB 12345"
+label = { de = "Handelsregisternummer", fr = "Numéro du registre du commerce", it = "Numero del registro delle imprese", en = "Commercial register number" }
+
+[variants.DE.register_court]
+type = "text"
+group = "identity"
+label = { de = "Registergericht", fr = "Tribunal du registre", it = "Tribunale del registro", en = "Register court" }
+example = "Amtsgericht München"
+
+[variants.DE.tax_number]
+type = "text"
+group = "tax"
+label = { de = "Steuernummer", fr = "Numéro fiscal", it = "Numero fiscale", en = "Tax number" }
+example = "143/123/45678"
+
+[variants.DE.vat_number]
+type = "text"
+group = "tax"
+pattern = "DE ?\\d{9}"
+example = "DE123456789"
+label = { de = "USt-IdNr.", fr = "Numéro d'identification TVA", it = "Partita IVA (USt-IdNr.)", en = "VAT ID (USt-IdNr.)" }
+help = { de = "Umsatzsteuer-Identifikationsnummer (Regelsatz 19 %, ermässigt 7 %).", fr = "Numéro d'identification TVA (taux normal 19 %, réduit 7 %).", it = "Numero di identificazione IVA (aliquota ordinaria 19 %, ridotta 7 %).", en = "VAT identification number (standard rate 19%, reduced 7%)." }
+
+[variants.DE.state]
+type = "choice"
+group = "address"
+label = { de = "Bundesland", fr = "Land", it = "Land", en = "Federal state" }
+choices = [
+  { value = "DE-BW", label = { de = "Baden-Württemberg", fr = "Bade-Wurtemberg", it = "Baden-Württemberg", en = "Baden-Württemberg" } },
+  { value = "DE-BY", label = { de = "Bayern", fr = "Bavière", it = "Baviera", en = "Bavaria" } },
+  { value = "DE-BE", label = { de = "Berlin", fr = "Berlin", it = "Berlino", en = "Berlin" } },
+  { value = "DE-BB", label = { de = "Brandenburg", fr = "Brandebourg", it = "Brandeburgo", en = "Brandenburg" } },
+  { value = "DE-HB", label = { de = "Bremen", fr = "Brême", it = "Brema", en = "Bremen" } },
+  { value = "DE-HH", label = { de = "Hamburg", fr = "Hambourg", it = "Amburgo", en = "Hamburg" } },
+  { value = "DE-HE", label = { de = "Hessen", fr = "Hesse", it = "Assia", en = "Hesse" } },
+  { value = "DE-MV", label = { de = "Mecklenburg-Vorpommern", fr = "Mecklembourg-Poméranie-Occidentale", it = "Meclemburgo-Pomerania Anteriore", en = "Mecklenburg-Western Pomerania" } },
+  { value = "DE-NI", label = { de = "Niedersachsen", fr = "Basse-Saxe", it = "Bassa Sassonia", en = "Lower Saxony" } },
+  { value = "DE-NW", label = { de = "Nordrhein-Westfalen", fr = "Rhénanie-du-Nord-Westphalie", it = "Renania Settentrionale-Vestfalia", en = "North Rhine-Westphalia" } },
+  { value = "DE-RP", label = { de = "Rheinland-Pfalz", fr = "Rhénanie-Palatinat", it = "Renania-Palatinato", en = "Rhineland-Palatinate" } },
+  { value = "DE-SL", label = { de = "Saarland", fr = "Sarre", it = "Saarland", en = "Saarland" } },
+  { value = "DE-SN", label = { de = "Sachsen", fr = "Saxe", it = "Sassonia", en = "Saxony" } },
+  { value = "DE-ST", label = { de = "Sachsen-Anhalt", fr = "Saxe-Anhalt", it = "Sassonia-Anhalt", en = "Saxony-Anhalt" } },
+  { value = "DE-SH", label = { de = "Schleswig-Holstein", fr = "Schleswig-Holstein", it = "Schleswig-Holstein", en = "Schleswig-Holstein" } },
+  { value = "DE-TH", label = { de = "Thüringen", fr = "Thuringe", it = "Turingia", en = "Thuringia" } },
+]
+
+[variants.DE.postal_code]
+type = "text"
+required = true
+group = "address"
+pattern = "\\d{5}"
+example = "80331"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[variants.DE.iban]
+type = "text"
+group = "bank"
+pattern = "DE\\d{2}(?: ?\\d{4}){4} ?\\d{2}"
+example = "DE89 3704 0044 0532 0130 00"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }
+
+# -- Österreich --------------------------------------------------------------
+
+[variants.AT.legal_form]
+type = "choice"
+group = "identity"
+label = { de = "Rechtsform", fr = "Forme juridique", it = "Forma giuridica", en = "Legal form" }
+choices = [
+  { value = "sole_proprietorship", label = { de = "Einzelunternehmen", fr = "Entreprise individuelle", it = "Ditta individuale", en = "Sole proprietorship" } },
+  { value = "og", label = { de = "OG", fr = "OG (société en nom collectif)", it = "OG (società in nome collettivo)", en = "OG (general partnership)" } },
+  { value = "kg", label = { de = "KG", fr = "KG (société en commandite)", it = "KG (società in accomandita)", en = "KG (limited partnership)" } },
+  { value = "gmbh", label = { de = "GmbH", fr = "GmbH", it = "GmbH", en = "GmbH (LLC)" } },
+  { value = "flexco", label = { de = "FlexKapG (FlexCo)", fr = "FlexKapG (FlexCo)", it = "FlexKapG (FlexCo)", en = "FlexKapG (FlexCo)" } },
+  { value = "ag", label = { de = "AG", fr = "AG (société anonyme)", it = "AG (società per azioni)", en = "AG (stock corporation)" } },
+  { value = "association", label = { de = "Verein", fr = "Association", it = "Associazione", en = "Association" } },
+  { value = "cooperative", label = { de = "Genossenschaft", fr = "Coopérative", it = "Cooperativa", en = "Cooperative" } },
+]
+
+[variants.AT.register_number]
+type = "text"
+group = "identity"
+pattern = "FN ?\\d{1,6} ?[a-z]"
+example = "FN 123456 a"
+label = { de = "Firmenbuchnummer", fr = "Numéro du registre des sociétés", it = "Numero del registro delle imprese", en = "Company register number" }
+
+[variants.AT.register_court]
+type = "text"
+group = "identity"
+label = { de = "Firmenbuchgericht", fr = "Tribunal du registre", it = "Tribunale del registro", en = "Register court" }
+example = "Handelsgericht Wien"
+
+[variants.AT.tax_number]
+type = "text"
+group = "tax"
+label = { de = "Steuernummer", fr = "Numéro fiscal", it = "Numero fiscale", en = "Tax number" }
+example = "12-345/6789"
+
+[variants.AT.vat_number]
+type = "text"
+group = "tax"
+pattern = "ATU ?\\d{8}"
+example = "ATU12345678"
+label = { de = "UID-Nummer", fr = "Numéro d'identification TVA (UID)", it = "Partita IVA (UID)", en = "VAT ID (UID)" }
+help = { de = "Umsatzsteuer-Identifikationsnummer (Normalsatz 20 %, ermässigt 10 % / 13 %).", fr = "Numéro d'identification TVA (taux normal 20 %, réduit 10 % / 13 %).", it = "Numero di identificazione IVA (aliquota ordinaria 20 %, ridotta 10 % / 13 %).", en = "VAT identification number (standard rate 20%, reduced 10% / 13%)." }
+
+[variants.AT.state]
+type = "choice"
+group = "address"
+label = { de = "Bundesland", fr = "Land", it = "Land", en = "Federal state" }
+choices = [
+  { value = "AT-1", label = { de = "Burgenland", fr = "Burgenland", it = "Burgenland", en = "Burgenland" } },
+  { value = "AT-2", label = { de = "Kärnten", fr = "Carinthie", it = "Carinzia", en = "Carinthia" } },
+  { value = "AT-3", label = { de = "Niederösterreich", fr = "Basse-Autriche", it = "Bassa Austria", en = "Lower Austria" } },
+  { value = "AT-4", label = { de = "Oberösterreich", fr = "Haute-Autriche", it = "Alta Austria", en = "Upper Austria" } },
+  { value = "AT-5", label = { de = "Salzburg", fr = "Salzbourg", it = "Salisburgo", en = "Salzburg" } },
+  { value = "AT-6", label = { de = "Steiermark", fr = "Styrie", it = "Stiria", en = "Styria" } },
+  { value = "AT-7", label = { de = "Tirol", fr = "Tyrol", it = "Tirolo", en = "Tyrol" } },
+  { value = "AT-8", label = { de = "Vorarlberg", fr = "Vorarlberg", it = "Vorarlberg", en = "Vorarlberg" } },
+  { value = "AT-9", label = { de = "Wien", fr = "Vienne", it = "Vienna", en = "Vienna" } },
+]
+
+[variants.AT.postal_code]
+type = "text"
+required = true
+group = "address"
+pattern = "\\d{4}"
+example = "1010"
+label = { de = "Postleitzahl", fr = "Code postal", it = "Codice postale", en = "Postal code" }
+
+[variants.AT.iban]
+type = "text"
+group = "bank"
+pattern = "AT\\d{2}(?: ?\\d{4}){4}"
+example = "AT61 1904 3002 3457 3201"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }

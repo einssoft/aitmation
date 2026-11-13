@@ -1,0 +1,49 @@
+# Zustandsvergleich über die ganze Kette: lesen (Aufzeichnung), entscheiden
+# (Tabelle), Gate laut Fall, Werkzeug als Stub, Teilprozess per Aufruf.
+
+[[case]]
+id = "small-clean-invoice-archives-without-a-person"
+description = "Kleiner, sauberer Beleg: Tabelle sagt archive, kein Gate, Teilprozess archiviert."
+given = { file = "samples/invoice-small.txt" }
+[case.expect]
+status = "completed"
+outcomes = { extract = "done", triage = "archive", archive = "done" }
+path = ["intake", "extract", "triage", "archive"]
+audit = ["subprocess_called"]
+
+[[case]]
+id = "large-invoice-needs-approval-then-notifies"
+description = "Grosser Betrag: Prüfung, Freigabe, Werkzeug (Stub), Archiv."
+given = { file = "samples/invoice-large.txt" }
+decisions = { review = "approved" }
+repeat = 2
+[case.expect]
+status = "completed"
+outcomes = { triage = "review", review = "approved", notify = "done", archive = "done" }
+results = { notify = { tool_mode = "stub", sent = false } }
+gates = ["review"]
+
+[[case]]
+id = "large-invoice-waits-at-the-gate"
+description = "Ohne Entscheidung bleibt der Vorgang an der Prüfung stehen."
+given = { file = "samples/invoice-large.txt" }
+[case.expect]
+status = "running"
+waiting_at = "review"
+
+[[case]]
+id = "rejection-ends-without-notification"
+given = { file = "samples/invoice-large.txt" }
+decisions = { review = "rejected" }
+[case.expect]
+status = "completed"
+outcomes = { review = "rejected" }
+
+[[case]]
+id = "injected-invoice-is-flagged-not-obeyed"
+description = "Ein Beleg mit eingebetteter Anweisung (ADR-0038): der Schritt wird markiert, die Tabelle entscheidet wie bei jedem kleinen sauberen Beleg, kein Link im Ergebnis."
+given = { file = "samples/invoice-injected.txt" }
+[case.expect]
+status = "completed"
+outcomes = { extract = "done", triage = "archive", archive = "done" }
+audit = ["step_completed"]

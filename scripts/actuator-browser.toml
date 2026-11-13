@@ -1,0 +1,60 @@
+# Services for scripts/actuator_browser.py (ADR-0041 §4).
+#
+# One table per image generator: where to go, where the prompt goes, how
+# to submit, which elements are results. Selectors are CSS (Playwright);
+# `submit = "Enter"` presses Enter in the prompt box, anything else is a
+# selector to click. `wait_seconds` bounds the generation, `settle_seconds`
+# gives the page a moment after the image appeared (progressive loading).
+#
+# The selectors for the public services are starting points - the pages
+# change without notice. Check them with the browser's inspector and
+# adjust here; the script does not need to change. Log in once with
+# `--login`; the profile folder keeps the session (never commit it).
+
+[defaults]
+wait_seconds = 180
+settle_seconds = 3
+
+[services.grok]
+url = "https://grok.com/"
+prompt_selector = "textarea, div[contenteditable='true']"
+submit = "Enter"
+result_selector = "img[src*='imagine'], img[alt*='Generated'], img[src^='blob:']"
+profile_dir = "_actuator/grok"
+
+# Grok as a short-clip generator (tasks of kind "video": run the actuator
+# with --kind video --service grok-video). The clip is fetched from the
+# <video> element's src.
+[services.grok-video]
+url = "https://grok.com/imagine"
+prompt_selector = "textarea, div[contenteditable='true']"
+submit = "Enter"
+result_selector = "video[src], video source[src]"
+wait_seconds = 300
+settle_seconds = 5
+profile_dir = "_actuator/grok"
+
+[services.chatgpt]
+url = "https://chatgpt.com/"
+prompt_selector = "#prompt-textarea"
+submit = "Enter"
+result_selector = "img[alt*='Generated'], img[src*='oaiusercontent']"
+profile_dir = "_actuator/chatgpt"
+
+[services.gemini]
+url = "https://gemini.google.com/app"
+prompt_selector = "div[contenteditable='true']"
+submit = "Enter"
+result_selector = "img[src*='generated'], img[alt*='Generated']"
+profile_dir = "_actuator/gemini"
+
+# Local page that behaves like a generator - used to try the actuator
+# without an account: file://<repo>/scripts/actuator-browser-test.html
+[services.local-test]
+url = "file:///REPLACE/scripts/actuator-browser-test.html"
+prompt_selector = "#prompt"
+submit = "#go"
+result_selector = "img.result"
+wait_seconds = 20
+settle_seconds = 0
+profile_dir = "_actuator/local-test"

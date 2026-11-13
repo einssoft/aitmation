@@ -1,0 +1,32 @@
+# Grundausstattung: die generische Dokumentkette (ADR-0014) und die vier
+# Basis-Dokumenttypen als erstes App-Bündel (ADR-0023). Fachlich neutral -
+# was ein Dokument bedeutet, steht in den Dokumenttypen, nicht im Kern.
+
+format = 2
+id = "document-basics"
+version = "0.1.0"
+name = { de = "Dokumente lesen und ablegen", fr = "Lire et classer les documents", it = "Leggere e archiviare i documenti", en = "Read and file documents" }
+description = { de = "Liest jedes eingehende Dokument, fasst es zusammen, legt es einem Menschen zur Prüfung vor und archiviert es nach Freigabe. Bringt die Dokumenttypen Rechnung, Kontoauszug, Brief und E-Mail mit.", fr = "Lit chaque document entrant, le résume, le soumet à une personne pour vérification et l'archive après validation. Fournit les types de documents facture, relevé bancaire, lettre et e-mail.", it = "Legge ogni documento in arrivo, lo riassume, lo sottopone a una persona per la verifica e lo archivia dopo l'approvazione. Include i tipi di documento fattura, estratto conto, lettera ed e-mail.", en = "Reads every incoming document, summarizes it, presents it to a person for review and archives it once approved. Ships the document types invoice, bank statement, letter and email." }
+license = "proprietary"
+
+[author]
+name = "aitmation"
+
+[requires]
+core = "0.0.1"
+data_class = "internal"
+connectors = []
+guardrails = []
+
+[settings.document_type]
+type = "text"
+label = { de = "Wie soll das Dokument bezeichnet werden?", fr = "Comment désigner le document ?", it = "Come va designato il documento?", en = "How should the document be referred to?" }
+help = { de = "Fliesst als Bezeichnung in die Zusammenfassung ein. Vorgabe: generisch.", fr = "Utilisé comme désignation dans le résumé. Par défaut : générique.", it = "Usato come designazione nel riassunto. Predefinito: generico.", en = "Used as the label inside the summary. Default: generic." }
+default = "generic"
+binds = ["document-read:document_type"]
+
+# Model roles (ADR-0035 §3): what the solution needs, never which model.
+[model_roles.default]
+structured_output = true
+vision = false
+max_data_class = "internal"

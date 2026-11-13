@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" id="defs_triage" name="Triage" namespace="https://aitmation.com/solutions">
+  <decision id="triage" name="Triage">
+    <description>Kleine, saubere Belege gehen direkt ins Archiv; alles andere zur Prüfung.</description>
+    <decisionTable id="triage_table" hitPolicy="UNIQUE">
+      <input id="i_total" label="Betrag CHF"><inputExpression typeRef="number"><text>steps.extract.total</text></inputExpression></input>
+      <input id="i_anomalies" label="Auffälligkeiten"><inputExpression typeRef="number"><text>steps.extract.anomaly_count</text></inputExpression></input>
+      <output id="o_outcome" name="outcome" typeRef="string"/>
+      <output id="o_reason" name="reason" typeRef="string"/>
+      <rule id="r_small_clean"><inputEntry><text>&lt; 100</text></inputEntry><inputEntry><text>0</text></inputEntry><outputEntry><text>"archive"</text></outputEntry><outputEntry><text>"small and clean"</text></outputEntry></rule>
+      <rule id="r_large"><inputEntry><text>&gt;= 100</text></inputEntry><inputEntry><text>-</text></inputEntry><outputEntry><text>"review"</text></outputEntry><outputEntry><text>"amount needs a person"</text></outputEntry></rule>
+      <rule id="r_anomalies"><inputEntry><text>&lt; 100</text></inputEntry><inputEntry><text>&gt; 0</text></inputEntry><outputEntry><text>"review"</text></outputEntry><outputEntry><text>"anomalies"</text></outputEntry></rule>
+    </decisionTable>
+  </decision>
+</definitions>

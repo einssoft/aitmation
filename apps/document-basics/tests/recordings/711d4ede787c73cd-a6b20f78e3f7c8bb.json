@@ -1,0 +1,23 @@
+{
+  "key": "711d4ede787c73cd-a6b20f78e3f7c8bb",
+  "payload_digest": "a6b20f78e3f7c8bbc12b2d80902b5529cec1fe8aed0acb420bd282b3b6489a42",
+  "prompt_hash": "711d4ede787c73cdf2df3f5962dd3e5a293bf9e11b12c273595a71deb42a080a",
+  "response": {
+    "confidence": 0.92,
+    "data": {
+      "anomalies": [],
+      "confidence": 0.92,
+      "rules_applied": [],
+      "summary": "Lieferantenrechnung der Muster Malerbedarf AG über CHF 518.90 für Dispersionsfarbe, zahlbar bis 30.09.2026."
+    },
+    "model_ref": "fake@1",
+    "tokens_in": 120,
+    "tokens_out": 40
+  },
+  "schema_hint": {
+    "anomalies": "list of anomalies, may be empty",
+    "rules_applied": "house rules used, with their source, may be empty",
+    "summary": "two to three sentences"
+  },
+  "task": "Summarize the document (declared type: generic) in two or three sentences and list anything unusual. Apply the house rules if any are given, and name the rule you applied.\n\nAnswer only with the requested fields; add nothing else."
+}

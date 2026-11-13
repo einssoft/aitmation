@@ -1,0 +1,14 @@
+# Abnahmefall (ADR-0023 §4): synthetischer Text, kein Kundenbeleg.
+id = "letter-is-recognized"
+description = "Ein behördlicher Brief mit Frist wird als letter erkannt."
+
+[given]
+text = """
+Ausgleichskasse des Kantons Musterland
+Sehr geehrte Damen und Herren
+Wir bitten Sie, die beiliegende Lohnbescheinigung bis zum 31.10.2026 ausgefüllt zu retournieren.
+Freundliche Grüsse
+"""
+
+[expect]
+doctype = "letter"

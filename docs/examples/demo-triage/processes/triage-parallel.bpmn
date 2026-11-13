@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:aimn="https://aitmation.com/schema/aimn/1" id="defs_triage_parallel" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="triage-parallel" name="Triage parallel" isExecutable="true" aimn:version="1">
+    <bpmn:documentation>Wie triage-flow, aber Extraktion und Absenderprüfung laufen parallel (ADR-0037): ein Parallel-Gateway öffnet beide Zweige, der zweite wartet, bis beide da sind. Erst dann entscheidet die Triage-Tabelle.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Triage parallel</aimn:title><aimn:title lang="fr">Triage en parallèle</aimn:title><aimn:title lang="it">Triage in parallelo</aimn:title><aimn:title lang="en">Parallel triage</aimn:title>
+        <aimn:description lang="de">Liest den Beleg und prüft den Absender gleichzeitig, entscheidet dann per Tabelle.</aimn:description><aimn:description lang="fr">Lit la pièce et vérifie l'expéditeur en même temps, puis décide par table.</aimn:description><aimn:description lang="it">Legge il documento e verifica il mittente contemporaneamente, poi decide per tabella.</aimn:description><aimn:description lang="en">Reads the document and checks the sender at the same time, then decides by table.</aimn:description>
+      </aimn:meta>
+      <aimn:policy name="privacy"><aimn:property name="category" value="internal"/></aimn:policy>
+      <aimn:policy name="model"><aimn:property name="confidence_threshold" value="0.5"/></aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="Eingang"><bpmn:extensionElements><aimn:trigger source="manual"/></bpmn:extensionElements></bpmn:startEvent>
+    <bpmn:parallelGateway id="split" name="parallel"/>
+    <bpmn:task id="extract" name="Beleg lesen"><bpmn:extensionElements><aimn:aiTask ref="extract"/></bpmn:extensionElements></bpmn:task>
+    <bpmn:businessRuleTask id="sender_check" name="Absender prüfen"><bpmn:extensionElements><aimn:decision ref="sender"/></bpmn:extensionElements></bpmn:businessRuleTask>
+    <bpmn:parallelGateway id="joined" name="beide da"/>
+    <bpmn:businessRuleTask id="triage" name="Triage"><bpmn:extensionElements><aimn:decision ref="triage"/></bpmn:extensionElements></bpmn:businessRuleTask>
+    <bpmn:userTask id="review" name="Prüfung"><bpmn:extensionElements><aimn:gate approving="approved"/></bpmn:extensionElements></bpmn:userTask>
+    <bpmn:callActivity id="archive" name="Archivieren" calledElement="archive-only"/>
+    <bpmn:endEvent id="finished" name="Ende"/>
+    <bpmn:endEvent id="declined" name="Abgelehnt"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="intake" targetRef="split"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="split" targetRef="extract"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="split" targetRef="sender_check"/>
+    <bpmn:sequenceFlow id="f4" name="done" sourceRef="extract" targetRef="joined"/>
+    <bpmn:sequenceFlow id="f5" name="failed" sourceRef="extract" targetRef="joined"/>
+    <bpmn:sequenceFlow id="f6" name="known" sourceRef="sender_check" targetRef="joined"/>
+    <bpmn:sequenceFlow id="f7" name="unknown" sourceRef="sender_check" targetRef="joined"/>
+    <bpmn:sequenceFlow id="f8" sourceRef="joined" targetRef="triage"/>
+    <bpmn:sequenceFlow id="f9" name="archive" sourceRef="triage" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f10" name="review" sourceRef="triage" targetRef="review"/>
+    <bpmn:sequenceFlow id="f11" name="failed" sourceRef="triage" targetRef="review"/>
+    <bpmn:sequenceFlow id="f12" name="approved" sourceRef="review" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f13" name="rejected" sourceRef="review" targetRef="declined"/>
+    <bpmn:sequenceFlow id="f14" name="done" sourceRef="archive" targetRef="finished"/>
+  </bpmn:process>
+</bpmn:definitions>

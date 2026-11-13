@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:aimn="https://aitmation.com/schema/aimn/1" id="defs_triage_flow" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="triage-flow" name="Triage" isExecutable="true" aimn:version="1">
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Triage</aimn:title><aimn:title lang="fr">Triage</aimn:title><aimn:title lang="it">Triage</aimn:title><aimn:title lang="en">Triage</aimn:title>
+        <aimn:description lang="de">Liest den Beleg, entscheidet per Tabelle, holt bei Bedarf eine Freigabe, meldet dem Absender und archiviert.</aimn:description><aimn:description lang="fr">Lit la pièce, décide par table, demande une validation si nécessaire, informe l'expéditeur et archive.</aimn:description><aimn:description lang="it">Legge il documento, decide per tabella, chiede un'approvazione se necessario, informa il mittente e archivia.</aimn:description><aimn:description lang="en">Reads the document, decides by table, asks for approval when needed, notifies the sender and archives.</aimn:description>
+      </aimn:meta>
+      <aimn:policy name="privacy"><aimn:property name="category" value="internal"/></aimn:policy>
+      <aimn:policy name="model"><aimn:property name="confidence_threshold" value="0.5"/></aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="Eingang"><bpmn:extensionElements><aimn:trigger source="manual"/></bpmn:extensionElements></bpmn:startEvent>
+    <bpmn:task id="extract" name="Beleg lesen"><bpmn:extensionElements><aimn:aiTask ref="extract"/></bpmn:extensionElements></bpmn:task>
+    <bpmn:businessRuleTask id="triage" name="Triage"><bpmn:extensionElements><aimn:decision ref="triage"/></bpmn:extensionElements></bpmn:businessRuleTask>
+    <bpmn:userTask id="review" name="Prüfung"><bpmn:extensionElements><aimn:gate approving="approved"/></bpmn:extensionElements></bpmn:userTask>
+    <bpmn:boundaryEvent id="review_deadline" attachedToRef="review" cancelActivity="false"><bpmn:timerEventDefinition><bpmn:timeDuration>P2D</bpmn:timeDuration></bpmn:timerEventDefinition></bpmn:boundaryEvent>
+    <bpmn:serviceTask id="notify" name="Absender informieren"><bpmn:extensionElements><aimn:toolCall action="notify-sender"/></bpmn:extensionElements></bpmn:serviceTask>
+    <bpmn:callActivity id="archive" name="Archivieren" calledElement="archive-only"/>
+    <bpmn:endEvent id="finished" name="Ende"/>
+    <bpmn:endEvent id="declined" name="Abgelehnt"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="intake" targetRef="extract"/>
+    <bpmn:sequenceFlow id="f2" name="done" sourceRef="extract" targetRef="triage"/>
+    <bpmn:sequenceFlow id="f3" name="failed" sourceRef="extract" targetRef="review"/>
+    <bpmn:sequenceFlow id="f4" name="review" sourceRef="triage" targetRef="review"/>
+    <bpmn:sequenceFlow id="f5" name="archive" sourceRef="triage" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f6" name="failed" sourceRef="triage" targetRef="review"/>
+    <bpmn:sequenceFlow id="f7" name="approved" sourceRef="review" targetRef="notify"/>
+    <bpmn:sequenceFlow id="f8" name="rejected" sourceRef="review" targetRef="declined"/>
+    <bpmn:sequenceFlow id="f9" name="done" sourceRef="notify" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f10" name="failed" sourceRef="notify" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f11" name="done" sourceRef="archive" targetRef="finished"/>
+  </bpmn:process>
+</bpmn:definitions>

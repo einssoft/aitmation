@@ -1,0 +1,23 @@
+{
+  "key": "2b5a0674f61d4aa1-906f66fd4a253463",
+  "payload_digest": "906f66fd4a253463c2f5ba5bf82582a510dc364c6ddee5b5f4120a9b8545b9c6",
+  "prompt_hash": "2b5a0674f61d4aa170b9f7c915be7bf243df0373395aefee2f862f9e750b43eb",
+  "response": {
+    "confidence": 0.93,
+    "data": {
+      "anomaly_count": 0,
+      "confidence": 0.93,
+      "notes": "Kleine Farbrechnung.",
+      "total": 48.0
+    },
+    "model_ref": "fake@1",
+    "tokens_in": 120,
+    "tokens_out": 30
+  },
+  "schema_hint": {
+    "anomaly_count": "number of unusual findings",
+    "notes": "one sentence on what you saw",
+    "total": "total amount in CHF as a number"
+  },
+  "task": "Role: You read incoming business documents for a small company.\n\nFind the total amount in CHF and count anything unusual (missing dates, inconsistent sums, unknown sender). Report the amount as a number.\n\nNever:\n- Never invent an amount; if none is visible, use 0.\n\nAnswer only with the requested fields; add nothing else."
+}

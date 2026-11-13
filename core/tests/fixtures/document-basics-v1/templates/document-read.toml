@@ -1,0 +1,43 @@
+# Generic sub-process (ADR-0014): take in a document, extract and summarize.
+# Domain-free - the document type is a parameter, not code. Started via
+# chaining only (the intake's dispatch routes here); the inbox folder is
+# watched by document-intake alone.
+
+id = "document-read"
+version = 1
+
+[meta]
+title = { de = "Dokument lesen", fr = "Lire le document", it = "Leggere il documento", en = "Read document" }
+description = { de = "Nimmt ein Dokument entgegen, extrahiert den Text und fasst ihn zusammen.", fr = "Reçoit un document, en extrait le texte et le résume.", it = "Riceve un documento, ne estrae il testo e lo riassume.", en = "Takes in a document, extracts the text and summarizes it." }
+
+[parameters]
+document_type = { default = "generic", description = "Referenz auf eine Dokumenttyp-Definition" }
+
+[contract.input]
+file = "Pfad zum Dokument im Case-Store"
+
+[contract.output]
+summary = "kurze Zusammenfassung des Inhalts"
+anomalies = "Liste von Auffälligkeiten, darf leer sein"
+
+[policy.privacy]
+category = "internal"
+
+[policy.model]
+confidence_threshold = 0.5
+
+[steps.intake]
+kind = "trigger"
+config = { source = "chain" }
+next = { fired = "read" }
+
+[steps.read]
+kind = "agent_step"
+next = { done = "process:document-review", failed = "end" }
+[steps.read.config]
+task = "Summarize the document (declared type: {param:document_type}) in two or three sentences and list anything unusual. Apply the house rules if any are given, and name the rule you applied."
+read_document = true
+# House rules (ADR-0031): passages from the instance's own knowledge space,
+# with provenance; nothing is required - an empty shelf means no rules.
+context = { document = true, knowledge = ["house-rules"] }
+output = { summary = "two to three sentences", anomalies = "list of anomalies, may be empty", rules_applied = "house rules used, with their source, may be empty" }

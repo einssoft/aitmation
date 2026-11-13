@@ -1,0 +1,23 @@
+{
+  "key": "2b5a0674f61d4aa1-0be596c207afc705",
+  "payload_digest": "0be596c207afc705a1a98a16248c7b3ac47952be52b419059025e82e66068623",
+  "prompt_hash": "2b5a0674f61d4aa170b9f7c915be7bf243df0373395aefee2f862f9e750b43eb",
+  "response": {
+    "confidence": 0.9,
+    "data": {
+      "anomaly_count": 0,
+      "confidence": 0.9,
+      "notes": "Wartungsrechnung über CHF 13'404.40.",
+      "total": 13404.4
+    },
+    "model_ref": "fake@1",
+    "tokens_in": 150,
+    "tokens_out": 40
+  },
+  "schema_hint": {
+    "anomaly_count": "number of unusual findings",
+    "notes": "one sentence on what you saw",
+    "total": "total amount in CHF as a number"
+  },
+  "task": "Role: You read incoming business documents for a small company.\n\nFind the total amount in CHF and count anything unusual (missing dates, inconsistent sums, unknown sender). Report the amount as a number.\n\nNever:\n- Never invent an amount; if none is visible, use 0.\n\nAnswer only with the requested fields; add nothing else."
+}

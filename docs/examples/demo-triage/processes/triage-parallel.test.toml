@@ -1,0 +1,19 @@
+# Parallele Zweige (ADR-0037): Extraktion (Aufzeichnung) und Absenderprüfung
+# (Tabelle) laufen gleichzeitig, der Join wartet auf beide.
+
+[[case]]
+id = "known-sender-small-invoice-archives"
+description = "Beide Zweige fertig, Join geht weiter, Tabelle sagt archive."
+given = { file = "samples/invoice-small.txt", sender = "muster-malerbedarf" }
+[case.expect]
+status = "completed"
+outcomes = { extract = "done", sender_check = "known", joined = "done", triage = "archive", archive = "done" }
+audit = ["branches_opened", "branch_arrived", "subprocess_called"]
+
+[[case]]
+id = "unknown-sender-large-invoice-waits-for-review"
+given = { file = "samples/invoice-large.txt", sender = "nobody" }
+[case.expect]
+status = "running"
+waiting_at = "review"
+outcomes = { sender_check = "unknown", joined = "done", triage = "review" }

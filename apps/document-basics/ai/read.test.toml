@@ -1,0 +1,11 @@
+# Beiwagen des AI-Tasks: strukturierte Felder exakt, Freitext über ein Kriterium.
+
+[[case]]
+id = "invoice-summary-has-no-anomalies"
+description = "Eine saubere Lieferantenrechnung ergibt eine Zusammenfassung ohne Auffälligkeiten."
+given = { file = "samples/supplier-invoice.txt" }
+repeat = 3
+
+[case.expect]
+outcome = "done"
+fields = { anomalies = [] }

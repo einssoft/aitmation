@@ -1,0 +1,62 @@
+# aitmation – docker-compose.yml
+#
+# This file is the source of truth for all deployment variants (see
+# docs/DEPLOYMENT.md), not the Coolify UI. Local and cloud run the same
+# topology:
+#
+#   docker compose --env-file .env.local up
+#
+# The default is ONE container per instance: the application with embedded
+# SQLite (ADR-0005, ADR-0011). The Postgres container is the per-tenant
+# escalation tier and is only started via the "postgres" profile:
+#
+#   docker compose --profile postgres up
+#
+# Notes:
+# - The image is built once in CI as multi-arch (linux/amd64, linux/arm64)
+#   and pulled from GHCR; Coolify does not build (ADR-0011).
+# - Compute-heavy work (transcription, accelerated OCR) does NOT run inside
+#   the container; it runs natively next to it and is reached through an
+#   interface (docs/DEPLOYMENT.md).
+# - The core knows neither launcher nor tenants (ADR-0001, ADR-0002).
+
+services:
+  app:
+    # In Coolify: resource type "Docker Image", tag = commit SHA from GHCR
+    # (built by .github/workflows/image.yml); `docker compose build` builds
+    # the same Dockerfile locally.
+    build: .
+    image: ${AITMATION_IMAGE:-aitmation:local}
+    restart: unless-stopped
+    ports:
+      - "${AITMATION_PORT:-8080}:8080"
+    environment:
+      # Environment variables win over the configuration file
+      # (docs/DEPLOYMENT.md, consequence 3).
+      AITMATION_DATA_DIR: /data
+      # Model access: the key for the provider configured in the registry
+      # (Einstellungen → Modelle); empty = agent steps run as stubs.
+      AITMATION_ANTHROPIC_API_KEY: ${AITMATION_ANTHROPIC_API_KEY:-}
+    volumes:
+      - app_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Per-tenant escalation tier (ADR-0005): only with --profile postgres.
+  db:
+    image: postgres:17-alpine
+    profiles: ["postgres"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aitmation}
+      POSTGRES_USER: ${POSTGRES_USER:-aitmation}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required in the postgres profile}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  app_data:
+  db_data:

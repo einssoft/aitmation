@@ -1,0 +1,14 @@
+# Document type declaration (docs/AGENTIK.md): data of the template layer.
+
+id = "email"
+title = { de = "E-Mail", fr = "E-mail", it = "E-mail", en = "Email" }
+description = "Eine als Datei abgelegte E-Mail-Nachricht."
+features = [
+  "Kopfzeilen wie Von, An, Betreff, Datum",
+  "Nachrichtentext, allenfalls mit Anhangsverweisen",
+]
+chain = "document-read"
+
+[fields]
+sender = "Absenderadresse"
+betreff = "Betreffzeile"

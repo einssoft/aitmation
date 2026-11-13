@@ -1,0 +1,5 @@
+# Solution-wide constants (ADR-0035 §2): referenced from processes and
+# briefings as {const:company.currency}. One place to change, no prompt
+# text repeated across elements.
+[company]
+currency = "CHF"

@@ -1,0 +1,16 @@
+# Abnahmefall (ADR-0023 §4): synthetischer Text, kein Kundenbeleg.
+id = "invoice-is-recognized"
+description = "Eine typische Lieferantenrechnung wird als invoice erkannt."
+
+[given]
+text = """
+Muster Malerbedarf AG, Farbweg 3, 8000 Zürich
+Rechnung Nr. 2026-0815 vom 01.09.2026
+Position: 20 l Dispersionsfarbe weiss  CHF 480.00
+MWST 8.1 %                              CHF 38.90
+Total                                    CHF 518.90
+Zahlbar bis 30.09.2026 - QR-Zahlteil beiliegend
+"""
+
+[expect]
+doctype = "invoice"

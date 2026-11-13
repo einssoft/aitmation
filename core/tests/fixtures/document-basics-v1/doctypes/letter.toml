@@ -1,0 +1,14 @@
+# Document type declaration (docs/AGENTIK.md): data of the template layer.
+
+id = "letter"
+title = { de = "Brief", fr = "Lettre", it = "Lettera", en = "Letter" }
+description = "Ein allgemeines Schreiben ohne Zahlungsforderung."
+features = [
+  "Absender- und Empfängeradresse, Anrede und Grussformel",
+  "Fliesstext ohne Rechnungsnummer und ohne Zahlteil",
+]
+chain = "document-read"
+
+[fields]
+sender = "Wer schreibt"
+betreff = "Worum es geht"

@@ -1,0 +1,17 @@
+# Document type declaration (docs/AGENTIK.md): data of the template layer.
+# "features" guide the intake classifier; "chain" is the deterministic route.
+
+id = "invoice"
+title = { de = "Rechnung", fr = "Facture", it = "Fattura", en = "Invoice" }
+description = "Eine Forderung: jemand verlangt Geld für eine Leistung oder Ware."
+features = [
+  "Rechnungsnummer und Rechnungsdatum",
+  "Betrag mit Währung, oft mit MWST-Ausweis",
+  "Zahlungsfrist, Zahlungsverbindung oder QR-Zahlteil",
+]
+chain = "document-read"
+
+[fields]
+sender = "Wer die Rechnung stellt"
+amount = "Geschuldeter Betrag mit Währung"
+due_date = "Zahlbar bis"

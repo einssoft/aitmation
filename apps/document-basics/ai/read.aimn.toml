@@ -1,0 +1,15 @@
+id = "read"
+model_role = "default"
+read_document = true
+
+[instructions]
+en = "Summarize the document (declared type: {param:document_type}) in two or three sentences and list anything unusual. Apply the house rules if any are given, and name the rule you applied."
+
+[output]
+summary = "two to three sentences"
+anomalies = "list of anomalies, may be empty"
+rules_applied = "house rules used, with their source, may be empty"
+
+[context]
+document = true
+knowledge = ["house-rules"]

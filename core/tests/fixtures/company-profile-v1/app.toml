@@ -1,0 +1,21 @@
+# Stammdaten: das Firmenprofil und das Haushaltsprofil als deklarierte
+# Datensätze (ADR-0026). Länder-Varianten CH/DE/AT: gleicher Datensatz,
+# je Land andere Kennungen, Register und Formate. Fachlich ist das die
+# Grundlage für alles, was den eigenen Namen, die eigene UID oder die
+# eigene Adresse kennen muss - der Kern kennt nur die Felder.
+
+format = 1
+id = "company-profile"
+version = "0.1.0"
+name = { de = "Stammdaten", fr = "Données de base", it = "Dati anagrafici", en = "Master data" }
+description = { de = "Firmenprofil (Firma) und Haushaltsprofil (privat) mit Länder-Varianten Schweiz, Deutschland und Österreich: Name, Adresse, Rechtsform, UID/USt-IdNr., Register, Bankverbindung, Sprache. Wird im Einrichtungs-Assistenten abgefragt und steht Vorlagen als Kontext zur Verfügung.", fr = "Profil d'entreprise (société) et profil de ménage (privé) avec variantes par pays Suisse, Allemagne et Autriche : nom, adresse, forme juridique, IDE/numéro de TVA, registre, coordonnées bancaires, langue. Demandé dans l'assistant de configuration et disponible comme contexte pour les modèles.", it = "Profilo aziendale (azienda) e profilo domestico (privato) con varianti per paese Svizzera, Germania e Austria: nome, indirizzo, forma giuridica, IDI/partita IVA, registro, coordinate bancarie, lingua. Richiesto nella procedura guidata di configurazione e disponibile come contesto per i modelli.", en = "Company profile (company) and household profile (private) with country variants Switzerland, Germany and Austria: name, address, legal form, UID/VAT number, register, bank details, language. Asked for in the setup wizard and available to templates as context." }
+license = "proprietary"
+
+[author]
+name = "aitmation"
+
+[requires]
+core = "0.0.1"
+data_class = "internal"
+connectors = []
+guardrails = []

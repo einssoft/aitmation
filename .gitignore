@@ -1,0 +1,46 @@
+# Build
+/launcher/bin/
+/launcher/dist/
+/launcher/launcher
+/launcher/aitmation-launcher
+*.exe
+
+# Runtime data (data directory layout)
+/data/
+/releases/
+/backups/
+*.db
+*.db-wal
+*.db-shm
+*.zst
+*.log
+
+# Environment
+.env
+config.local.toml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+# uv.lock is checked in on purpose (reproducible bundles)
+
+# Editor / operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+/_to_delete/
+_actuator/
+
+# Node
+node_modules/
+/ui/dist/
+/_dev/

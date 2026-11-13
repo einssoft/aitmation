@@ -1,0 +1,10 @@
+# Prüfkonfiguration (ADR-0035 §7): Modellrollen werden aus tests/recordings/
+# abgespielt, Werkzeuge mit Aussenwirkung laufen als Stub, die Uhr steht,
+# Benachrichtigungen werden protokolliert statt gesendet. Die reservierten
+# Vorgaben gelten auch ohne diese Datei; hier stehen nur Verfeinerungen.
+name = "test"
+description = { de = "Abspielen aufgezeichneter Modellantworten, keine Aussenwirkung.", fr = "Relecture des réponses enregistrées, aucun effet externe.", it = "Riproduzione delle risposte registrate, nessun effetto esterno.", en = "Replays recorded model answers, no outside effect." }
+now = "2026-09-01T09:00:00+02:00"
+
+[model_roles]
+"*" = "recording"

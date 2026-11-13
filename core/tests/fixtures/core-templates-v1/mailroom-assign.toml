@@ -1,0 +1,44 @@
+# The Vermittler template (docs/VERMITTLER.md). An instance becomes the
+# Vermittler by loading THIS template set (AITMATION_TEMPLATES_DIR points
+# here) - never alongside the Mandant templates, since both watch the inbox.
+#
+# Escalation ladder: a standing mandate (deterministic envelope rule,
+# ADR-0016) delivers without a gate; a model proposal or nothing at all
+# lands at the addressing gate. "assigned" is the approving outcome: the
+# human assignment IS the approval of the delivery (ADR-0007).
+# The forward action moves the files - the Vermittler keeps no copies.
+
+id = "mailroom-assign"
+version = 1
+
+[meta]
+title = "Eingang zuordnen"
+description = "Ordnet jedes eingehende Dokument einem Adressaten zu und stellt es zu."
+
+[policy.privacy]
+category = "internal"
+
+[policy.model]
+confidence_threshold = 0.7
+
+[steps.intake]
+kind = "trigger"
+config = { source = "folder" }
+next = { fired = "address" }
+
+[steps.address]
+kind = "agent_step"
+next = { rule = "deliver", proposal = "choose_addressee", unknown = "choose_addressee", failed = "choose_addressee" }
+[steps.address.config]
+assign = true
+output = { addressee = "id of the matching addressee, or 'unknown'" }
+
+[steps.choose_addressee]
+kind = "human_gate"
+config = { addressing = true, approving_outcomes = ["assigned"] }
+next = { assigned = "deliver", discarded = "end" }
+
+[steps.deliver]
+kind = "system_action"
+config = { action = "forward", mandate = true }
+next = { done = "end", failed = "end" }

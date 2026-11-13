@@ -1,0 +1,57 @@
+# Eigene Konten - Bank, Kreditkarte, Kasse - als Sammlung (ADR-0026).
+# Der Abgleich von Kontoauszügen und die Abgrenzung privat/geschäftlich
+# brauchen die Liste; sie bleibt schmal.
+
+id = "accounts"
+title = { de = "Konten", fr = "Comptes", it = "Conti", en = "Accounts" }
+description = { de = "Eigene Bank-, Karten- und Kassenkonten mit IBAN, Währung und Zweck.", fr = "Comptes bancaires, cartes et caisses propres avec IBAN, monnaie et usage.", it = "Conti bancari, carte e cassa propri con IBAN, valuta e scopo.", en = "Own bank, card and cash accounts with IBAN, currency and purpose." }
+scope = "any"
+kind = "collection"
+label_field = "name"
+search_fields = ["name", "iban", "bank"]
+
+[fields.name]
+type = "text"
+required = true
+label = { de = "Bezeichnung", fr = "Désignation", it = "Denominazione", en = "Name" }
+example = "Geschäftskonto UBS"
+
+[fields.kind]
+type = "choice"
+required = true
+default = "bank"
+label = { de = "Art", fr = "Type", it = "Tipo", en = "Kind" }
+choices = [
+  { value = "bank", label = { de = "Bankkonto", fr = "Compte bancaire", it = "Conto bancario", en = "Bank account" } },
+  { value = "card", label = { de = "Kreditkarte", fr = "Carte de crédit", it = "Carta di credito", en = "Credit card" } },
+  { value = "cash", label = { de = "Kasse", fr = "Caisse", it = "Cassa", en = "Cash" } },
+  { value = "other", label = { de = "Andere", fr = "Autre", it = "Altro", en = "Other" } },
+]
+
+[fields.bank]
+type = "text"
+label = { de = "Bank / Herausgeber", fr = "Banque / émetteur", it = "Banca / emittente", en = "Bank / issuer" }
+
+[fields.iban]
+type = "text"
+label = { de = "IBAN", fr = "IBAN", it = "IBAN", en = "IBAN" }
+
+[fields.currency]
+type = "choice"
+default = "CHF"
+label = { de = "Währung", fr = "Monnaie", it = "Valuta", en = "Currency" }
+choices = ["CHF", "EUR", "USD", "GBP"]
+
+[fields.purpose]
+type = "choice"
+default = "business"
+label = { de = "Zweck", fr = "Usage", it = "Scopo", en = "Purpose" }
+choices = [
+  { value = "business", label = { de = "geschäftlich", fr = "professionnel", it = "aziendale", en = "business" } },
+  { value = "private", label = { de = "privat", fr = "privé", it = "privato", en = "private" } },
+  { value = "mixed", label = { de = "gemischt", fr = "mixte", it = "misto", en = "mixed" } },
+]
+
+[fields.notes]
+type = "text"
+label = { de = "Bemerkungen", fr = "Remarques", it = "Osservazioni", en = "Notes" }

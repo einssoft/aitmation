@@ -1,0 +1,10 @@
+id = "notify-sender"
+name = { de = "Absender benachrichtigen", fr = "Informer l'expéditeur", it = "Informare il mittente", en = "Notify the sender" }
+description = { de = "Schickt dem Absender eine kurze Bestätigung, dass das Dokument bearbeitet wurde.", fr = "Envoie à l'expéditeur une courte confirmation.", it = "Invia al mittente una breve conferma.", en = "Sends the sender a short confirmation that the document was handled." }
+effect = "external"
+action = "notify_sender"      # Kern-Aktion; existiert heute nicht -> unter standard: failed, unter test: Stub
+on_error = "failed"
+[inputs]
+to = "Adresse des Absenders"
+[outputs]
+sent = "true, wenn verschickt"

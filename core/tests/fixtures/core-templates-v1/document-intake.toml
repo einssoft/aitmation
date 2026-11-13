@@ -1,0 +1,41 @@
+# Generic intake (docs/AGENTIK.md): every inbox document enters here.
+# An agent judges the document type ("classify"); routing is deterministic -
+# the dispatch action reads the recognized type's declared chain, never the
+# model. Unknown or uncertain documents are sorted out to a human gate for
+# manual categorization; that gate is how the system grows new categories.
+
+id = "document-intake"
+version = 1
+
+[meta]
+title = "Dokument-Eingang"
+description = "Nimmt jedes Dokument entgegen, bestimmt den Typ und startet die passende Kette."
+
+[policy.privacy]
+category = "internal"
+
+[policy.model]
+confidence_threshold = 0.7
+
+[steps.intake]
+kind = "trigger"
+config = { source = "folder" }
+next = { fired = "classify" }
+
+[steps.classify]
+kind = "agent_step"
+next = { recognized = "dispatch", unknown = "categorize", failed = "categorize" }
+[steps.classify.config]
+classify = true
+read_document = true
+output = { category = "id of the matching document type, or 'unknown'" }
+
+[steps.categorize]
+kind = "human_gate"
+config = { categorization = true }
+next = { assigned = "dispatch", discarded = "end" }
+
+[steps.dispatch]
+kind = "system_action"
+config = { action = "dispatch" }
+next = { done = "end", failed = "end" }

@@ -1,0 +1,20 @@
+# Generic sub-process (ADR-0014): archive the document and its case summary.
+# "archive" is an INTERNAL_ACTION (writes only into our own data directory),
+# therefore allowed without a gate - see definition.INTERNAL_ACTIONS.
+
+id = "document-archive"
+version = 1
+
+[meta]
+title = { de = "Dokument archivieren", fr = "Archiver le document", it = "Archiviare il documento", en = "Archive document" }
+description = { de = "Legt Dokument und Vorgangszusammenfassung im Archiv ab.", fr = "Dépose le document et le résumé du dossier dans les archives.", it = "Deposita il documento e il riassunto della pratica nell'archivio.", en = "Files the document and the case summary in the archive." }
+
+[steps.intake]
+kind = "trigger"
+config = { source = "chain" }
+next = { fired = "archive" }
+
+[steps.archive]
+kind = "system_action"
+config = { action = "archive" }
+next = { done = "end" }

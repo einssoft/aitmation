@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:aimn="https://aitmation.com/schema/aimn/1" id="defs_task_intake" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="task-intake" name="Aufgabe anlegen" isExecutable="true" aimn:version="1">
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Aufgabe anlegen</aimn:title>
+        <aimn:title lang="fr">Créer une tâche</aimn:title>
+        <aimn:title lang="it">Creare un compito</aimn:title>
+        <aimn:title lang="en">Create a task</aimn:title>
+        <aimn:description lang="de">Eine Aufgabe, ein Fehler, eine Idee oder eine Frage landet in der Sammlung Aufgaben – aus dem Chat („Erstelle Aufgabe: Offerte nachfassen") oder von Hand.</aimn:description>
+        <aimn:description lang="fr">Une tâche, un bug, une idée ou une question entre dans la collection Tâches – depuis le chat ou à la main.</aimn:description>
+        <aimn:description lang="it">Un compito, un errore, un'idea o una domanda entra nella raccolta Compiti – dalla chat o a mano.</aimn:description>
+        <aimn:description lang="en">A task, bug, idea or question lands in the Tasks collection – from the chat ("Create task: follow up on the offer") or by hand.</aimn:description>
+      </aimn:meta>
+      <aimn:contract>
+        <aimn:input name="topic">what has to be done (the title)</aimn:input>
+        <aimn:input name="kind" default="task">task | bug | idea | question</aimn:input>
+        <aimn:input name="priority" default="normal">low | normal | high | urgent</aimn:input>
+        <aimn:input name="due" default="">due date YYYY-MM-DD, may stay empty</aimn:input>
+        <aimn:input name="assignee" default="">who</aimn:input>
+        <aimn:input name="details" default="">more about it</aimn:input>
+        <aimn:output name="row_id">the row in the tasks collection</aimn:output>
+      </aimn:contract>
+      <aimn:policy name="privacy"><aimn:property name="category" value="internal"/></aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="start" name="Aufgabe"><bpmn:extensionElements><aimn:trigger source="manual"/></bpmn:extensionElements></bpmn:startEvent>
+    <bpmn:serviceTask id="file" name="In die Aufgaben"><bpmn:extensionElements><aimn:toolCall action="record">
+      <aimn:property name="collection" value="tasks"/>
+      <aimn:property name="inputs">
+        <aimn:property name="title" value="trigger.topic"/>
+        <aimn:property name="kind" value="trigger.kind"/>
+        <aimn:property name="priority" value="trigger.priority"/>
+        <aimn:property name="due" value="trigger.due"/>
+        <aimn:property name="assignee" value="trigger.assignee"/>
+        <aimn:property name="details" value="trigger.details"/>
+        <aimn:property name="status" value="literal:open"/>
+        <aimn:property name="origin" value="literal:chat"/>
+      </aimn:property>
+    </aimn:toolCall></bpmn:extensionElements></bpmn:serviceTask>
+    <bpmn:endEvent id="finished" name="Ende"/>
+    <bpmn:endEvent id="dropped" name="Nicht angelegt"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="file"/>
+    <bpmn:sequenceFlow id="f2" name="done" sourceRef="file" targetRef="finished"/>
+    <bpmn:sequenceFlow id="f3" name="failed" sourceRef="file" targetRef="dropped"/>
+  </bpmn:process>
+</bpmn:definitions>

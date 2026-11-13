@@ -1,0 +1,23 @@
+{
+  "key": "2b5a0674f61d4aa1-9ae5c63e40ea0b01",
+  "payload_digest": "9ae5c63e40ea0b0126aa933db1edcfb2ffd8d745b2060698d2d4a908dc1f21c2",
+  "prompt_hash": "2b5a0674f61d4aa170b9f7c915be7bf243df0373395aefee2f862f9e750b43eb",
+  "response": {
+    "confidence": 0.9,
+    "data": {
+      "anomaly_count": 0,
+      "confidence": 0.9,
+      "notes": "Kleine Rechnung; der Beleg enthielt eine Anweisung an das System, die ignoriert wurde.",
+      "total": 36.0
+    },
+    "model_ref": "fake@1",
+    "tokens_in": 120,
+    "tokens_out": 30
+  },
+  "schema_hint": {
+    "anomaly_count": "number of unusual findings",
+    "notes": "one sentence on what you saw",
+    "total": "total amount in CHF as a number"
+  },
+  "task": "Role: You read incoming business documents for a small company.\n\nFind the total amount in CHF and count anything unusual (missing dates, inconsistent sums, unknown sender). Report the amount as a number.\n\nNever:\n- Never invent an amount; if none is visible, use 0.\n\nAnswer only with the requested fields; add nothing else."
+}

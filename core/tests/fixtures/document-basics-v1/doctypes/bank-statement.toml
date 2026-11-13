@@ -1,0 +1,16 @@
+# Document type declaration (docs/AGENTIK.md): data of the template layer.
+
+id = "bank-statement"
+title = { de = "Kontoauszug", fr = "Relevé bancaire", it = "Estratto conto", en = "Bank statement" }
+description = "Eine Aufstellung von Kontobewegungen einer Bank über einen Zeitraum."
+features = [
+  "IBAN oder Kontonummer und ein Auszugszeitraum",
+  "Liste von Buchungen mit Valuta, Text und Betrag",
+  "Anfangs- und Schlusssaldo",
+]
+chain = "document-read"
+
+[fields]
+bank = "Name der Bank"
+zeitraum = "Auszugszeitraum"
+schlusssaldo = "Saldo am Ende des Zeitraums"

@@ -1,0 +1,9 @@
+# Knowledge space (ADR-0031) this bundle expects: the instance's own rules
+# for handling documents. The bundle declares the shelf; the owner fills
+# it (Wissen -> Wissensräume). document-read binds to it, so what the
+# owner writes here ("invoices above 1000 CHF go to Erika", "our VAT
+# number is ...") reaches the summary step - with provenance.
+id = "house-rules"
+title = { de = "Hausregeln", fr = "Règles internes", it = "Regole interne", en = "House rules" }
+description = { de = "Eigene Regeln und Hinweise für die Dokumentverarbeitung: Zuständigkeiten, Grenzwerte, Besonderheiten.", fr = "Règles et indications internes pour le traitement des documents : responsabilités, seuils, particularités.", it = "Regole e indicazioni interne per l'elaborazione dei documenti: responsabilità, soglie, particolarità.", en = "The instance's own rules and hints for document handling: responsibilities, thresholds, particularities." }
+data_class = "confidential"

@@ -1,0 +1,26 @@
+# Generic sub-process (ADR-0014): a human reviews the prepared document.
+# Started via chaining only (trigger source "chain"), never by the inbox.
+
+id = "document-review"
+version = 1
+
+[meta]
+title = { de = "Dokument prüfen", fr = "Vérifier le document", it = "Verificare il documento", en = "Review document" }
+description = { de = "Menschliche Prüfung des aufbereiteten Dokuments.", fr = "Vérification humaine du document préparé.", it = "Verifica umana del documento preparato.", en = "Human review of the prepared document." }
+
+[contract.input]
+summary = "Zusammenfassung aus document-read"
+
+[policy.sla]
+remind_after_hours = 24
+escalate_after_hours = 48
+
+[steps.intake]
+kind = "trigger"
+config = { source = "chain" }
+next = { fired = "review" }
+
+[steps.review]
+kind = "human_gate"
+config = { deadline_seconds = 172800 }
+next = { approved = "process:document-archive", rejected = "end" }

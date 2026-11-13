@@ -1,0 +1,75 @@
+# Die Sammlung "Aufgaben": alles, was erledigt werden muss, in einer
+# Liste - Aufgabe, Fehler, Idee, Frage. Versioniert wie jede Sammlung
+# (ADR-0026); "origin" sagt, woher die Zeile kam (Vorgang, Meeting, Mail).
+
+id = "tasks"
+title = { de = "Aufgaben", fr = "Tâches", it = "Compiti", en = "Tasks" }
+description = { de = "Aufgaben, Fehler, Ideen und Fragen mit Status, Priorität, Termin und Zuständigkeit.", fr = "Tâches, bugs, idées et questions avec statut, priorité, échéance et responsable.", it = "Compiti, errori, idee e domande con stato, priorità, scadenza e responsabile.", en = "Tasks, bugs, ideas and questions with status, priority, due date and owner." }
+scope = "any"
+kind = "collection"
+label_field = "title"
+search_fields = ["title", "details", "assignee", "area", "origin"]
+
+[fields.title]
+type = "text"
+required = true
+label = { de = "Titel", fr = "Titre", it = "Titolo", en = "Title" }
+
+[fields.kind]
+type = "choice"
+required = true
+default = "task"
+label = { de = "Art", fr = "Type", it = "Tipo", en = "Kind" }
+choices = [
+  { value = "task", label = { de = "Aufgabe", fr = "Tâche", it = "Compito", en = "Task" } },
+  { value = "bug", label = { de = "Fehler", fr = "Bug", it = "Errore", en = "Bug" } },
+  { value = "idea", label = { de = "Idee", fr = "Idée", it = "Idea", en = "Idea" } },
+  { value = "question", label = { de = "Frage", fr = "Question", it = "Domanda", en = "Question" } },
+]
+
+[fields.status]
+type = "choice"
+required = true
+default = "open"
+label = { de = "Status", fr = "Statut", it = "Stato", en = "Status" }
+choices = [
+  { value = "open", label = { de = "Offen", fr = "Ouvert", it = "Aperto", en = "Open" } },
+  { value = "in_progress", label = { de = "In Arbeit", fr = "En cours", it = "In corso", en = "In progress" } },
+  { value = "waiting", label = { de = "Wartet", fr = "En attente", it = "In attesa", en = "Waiting" } },
+  { value = "done", label = { de = "Erledigt", fr = "Terminé", it = "Fatto", en = "Done" } },
+  { value = "dropped", label = { de = "Verworfen", fr = "Abandonné", it = "Scartato", en = "Dropped" } },
+]
+
+[fields.priority]
+type = "choice"
+required = true
+default = "normal"
+label = { de = "Priorität", fr = "Priorité", it = "Priorità", en = "Priority" }
+choices = [
+  { value = "low", label = { de = "Niedrig", fr = "Basse", it = "Bassa", en = "Low" } },
+  { value = "normal", label = { de = "Normal", fr = "Normale", it = "Normale", en = "Normal" } },
+  { value = "high", label = { de = "Hoch", fr = "Haute", it = "Alta", en = "High" } },
+  { value = "urgent", label = { de = "Dringend", fr = "Urgente", it = "Urgente", en = "Urgent" } },
+]
+
+[fields.due]
+type = "text"
+pattern = "\\d{4}-\\d{2}-\\d{2}"
+example = "2026-12-31"
+label = { de = "Termin", fr = "Échéance", it = "Scadenza", en = "Due" }
+
+[fields.assignee]
+type = "text"
+label = { de = "Zuständig", fr = "Responsable", it = "Responsabile", en = "Assignee" }
+
+[fields.area]
+type = "text"
+label = { de = "Bereich", fr = "Domaine", it = "Ambito", en = "Area" }
+
+[fields.details]
+type = "text"
+label = { de = "Details", fr = "Détails", it = "Dettagli", en = "Details" }
+
+[fields.origin]
+type = "text"
+label = { de = "Herkunft", fr = "Origine", it = "Origine", en = "Origin" }

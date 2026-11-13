@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:aimn="https://aitmation.com/schema/aimn/1" id="defs_archive_only" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="archive-only" name="Archivieren" isExecutable="true" aimn:version="1">
+    <bpmn:startEvent id="intake"><bpmn:extensionElements><aimn:trigger source="chain"/></bpmn:extensionElements></bpmn:startEvent>
+    <bpmn:serviceTask id="archive" name="Ablegen"><bpmn:extensionElements><aimn:toolCall action="archive"/></bpmn:extensionElements></bpmn:serviceTask>
+    <bpmn:endEvent id="finished"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="intake" targetRef="archive"/>
+    <bpmn:sequenceFlow id="f2" name="done" sourceRef="archive" targetRef="finished"/>
+  </bpmn:process>
+</bpmn:definitions>

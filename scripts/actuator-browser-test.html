@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fake image generator (actuator test)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 720px; }
+  textarea { width: 100%; height: 6rem; }
+  img.result { display: block; margin-top: 1rem; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+<h1>Fake image generator</h1>
+<p>Stands in for Grok/ChatGPT/Gemini: a prompt goes in, two seconds later an
+image with the prompt drawn on it appears. No network, no account.</p>
+<textarea id="prompt" placeholder="prompt"></textarea>
+<button id="go">Generate</button>
+<div id="results"></div>
+<script>
+  document.getElementById("go").addEventListener("click", () => {
+    const text = document.getElementById("prompt").value;
+    setTimeout(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640; canvas.height = 640;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#1e1e2f"; ctx.fillRect(0, 0, 640, 640);
+      ctx.fillStyle = "#fff"; ctx.font = "20px sans-serif";
+      text.split("\n").slice(0, 24).forEach((line, i) => ctx.fillText(line.slice(0, 55), 20, 40 + i * 24));
+      const img = document.createElement("img");
+      img.className = "result";
+      img.src = canvas.toDataURL("image/png");
+      img.width = 320;
+      document.getElementById("results").appendChild(img);
+    }, 2000);
+  });
+</script>
+</body>
+</html>

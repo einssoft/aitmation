@@ -1,0 +1,8 @@
+name = "test"
+now = "2026-10-01T09:00:00+02:00"
+[model_roles]
+"*" = "recording"
+[tools.notify-sender]
+mode = "stub"
+outcome = "done"
+result = { sent = false }

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:aimn="https://aitmation.com/schema/aimn/1" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="defs_document-archive" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="document-archive" name="Dokument archivieren" isExecutable="true" aimn:version="1">
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Dokument archivieren</aimn:title>
+        <aimn:title lang="fr">Archiver le document</aimn:title>
+        <aimn:title lang="it">Archiviare il documento</aimn:title>
+        <aimn:title lang="en">Archive document</aimn:title>
+        <aimn:description lang="de">Legt Dokument und Vorgangszusammenfassung im Archiv ab.</aimn:description>
+        <aimn:description lang="fr">Dépose le document et le résumé du dossier dans les archives.</aimn:description>
+        <aimn:description lang="it">Deposita il documento e il riassunto della pratica nell'archivio.</aimn:description>
+        <aimn:description lang="en">Files the document and the case summary in the archive.</aimn:description>
+      </aimn:meta>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="intake">
+      <bpmn:extensionElements>
+        <aimn:trigger source="chain" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>intake</bpmn:documentation>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="archive" name="archive">
+      <bpmn:extensionElements>
+        <aimn:toolCall action="archive" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>archive</bpmn:documentation>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_intake_fired" name="fired" sourceRef="intake" targetRef="archive" />
+    <bpmn:endEvent id="finished" />
+    <bpmn:sequenceFlow id="flow_archive_done" name="done" sourceRef="archive" targetRef="finished" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram_document-archive">
+    <bpmndi:BPMNPlane id="plane_document-archive" bpmnElement="document-archive">
+      <bpmndi:BPMNShape id="shape_intake" bpmnElement="intake">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_archive" bpmnElement="archive">
+        <dc:Bounds x="360" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finished" bpmnElement="finished">
+        <dc:Bounds x="560" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_intake_fired" bpmnElement="flow_intake_fired">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="360" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_archive_done" bpmnElement="flow_archive_done">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

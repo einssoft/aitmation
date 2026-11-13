@@ -1,0 +1,7 @@
+[[case]]
+id = "clean-invoice-has-no-anomalies"
+given = { file = "samples/invoice-small.txt" }
+repeat = 2
+[case.expect]
+outcome = "done"
+fields = { anomaly_count = 0 }

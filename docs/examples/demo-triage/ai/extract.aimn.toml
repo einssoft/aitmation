@@ -1,0 +1,15 @@
+id = "extract"
+model_role = "extractor"
+read_document = true
+limits = ["Never invent an amount; if none is visible, use 0."]
+
+[role]
+en = "You read incoming business documents for a small company."
+[instructions]
+en = "Find the total amount in {const:company.currency} and count anything unusual (missing dates, inconsistent sums, unknown sender). Report the amount as a number."
+[output]
+total = "total amount in {const:company.currency} as a number"
+anomaly_count = "number of unusual findings"
+notes = "one sentence on what you saw"
+[context]
+document = true

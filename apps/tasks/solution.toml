@@ -1,0 +1,21 @@
+# Aufgaben und Fehler (ADR-0049): eine Sammlung, in die alles mündet, was
+# erledigt werden muss - von Hand angelegt, aus dem Chat, aus einem
+# Vorgang (interne Aktion "record"), aus einem Meeting-Protokoll. Keine
+# Projektverwaltung: Titel, Art, Status, Priorität, Termin, wer, woher.
+# Die Seite Alltag → Aufgaben zeigt die Sammlung als Tafel.
+
+format = 2
+id = "tasks"
+version = "0.1.0"
+name = { de = "Aufgaben", fr = "Tâches", it = "Compiti", en = "Tasks" }
+description = { de = "Aufgaben, Fehler, Ideen und Fragen als Sammlung mit Status, Priorität und Termin. Angelegt von Hand, aus dem Chat („Erstelle Aufgabe: …“) oder aus Vorgängen und Meeting-Protokollen; Alltag → Aufgaben zeigt sie als Tafel.", fr = "Tâches, bugs, idées et questions dans une collection avec statut, priorité et échéance. Créées à la main, depuis le chat ou depuis des cas et des comptes rendus de réunion ; Quotidien → Tâches les affiche en tableau.", it = "Compiti, errori, idee e domande come raccolta con stato, priorità e scadenza. Creati a mano, dalla chat o da casi e verbali di riunione; Quotidiano → Compiti li mostra come lavagna.", en = "Tasks, bugs, ideas and questions as a collection with status, priority and due date. Created by hand, from the chat (\"Create task: …\") or from cases and meeting minutes; Everyday → Tasks shows them as a board." }
+license = "Apache-2.0"
+
+[author]
+name = "aitmation"
+
+[requires]
+core = "0.0.1"
+data_class = "internal"
+connectors = []
+guardrails = []

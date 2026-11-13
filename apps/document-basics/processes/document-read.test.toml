@@ -1,0 +1,35 @@
+# Beiwagen (ADR-0035 §6): Zustandsvergleich, kein Gesprächsurteil.
+
+[[case]]
+id = "summary-reaches-the-reviewer"
+description = "Ein gelesenes Dokument landet mit Zusammenfassung an der Prüfung; nach Freigabe wird archiviert."
+given = { file = "samples/supplier-invoice.txt" }
+decisions = { review = "approved" }
+
+[case.expect]
+status = "completed"
+outcomes = { read = "done" }
+path = ["intake", "read"]
+chain = ["document-review", "document-archive"]
+results = { read = { anomalies = [] } }
+audit = ["case_started", "step_completed", "case_completed"]
+
+[[case]]
+id = "rejection-ends-the-chain"
+description = "Lehnt die Prüfung ab, startet keine Archivierung."
+given = { file = "samples/supplier-invoice.txt" }
+decisions = { review = "rejected" }
+
+[case.expect]
+status = "completed"
+chain = ["document-review"]
+
+[[case]]
+id = "undecided-review-waits"
+description = "Ohne menschliche Entscheidung bleibt die Kette an der Prüfung stehen - nichts läuft von allein weiter."
+given = { file = "samples/supplier-invoice.txt" }
+repeat = 2
+
+[case.expect]
+status = "completed"
+chain = ["document-review"]

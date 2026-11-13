@@ -1,0 +1,30 @@
+# Wiedervorlage (ADR-0014, Stufe 1.3): a deadline a person sets by hand -
+# "look at this again on the 30th", with or without a document. Started
+# from the shell (POST /api/v1/followups), never by the inbox. The timer
+# waits until the chosen day, then a gate asks whether it is done.
+
+id = "follow-up"
+version = 1
+
+[meta]
+title = { de = "Wiedervorlage", fr = "Rappel à échéance", it = "Scadenza", en = "Follow-up" }
+description = { de = "Erinnert am gewählten Tag an eine Frist oder ein Dokument und fragt, ob es erledigt ist.", fr = "Rappelle une échéance ou un document au jour choisi et demande si c'est réglé.", it = "Ricorda una scadenza o un documento nel giorno scelto e chiede se è sbrigato.", en = "Brings a deadline or a document back on the chosen day and asks whether it is done." }
+
+[policy.sla]
+remind_after_hours = 24
+escalate_after_hours = 72
+
+[steps.start]
+kind = "trigger"
+config = { source = "manual" }
+next = { fired = "wait" }
+
+[steps.wait]
+kind = "timer"
+config = { until_from = "due_at", seconds = 0 }
+next = { elapsed = "due" }
+
+[steps.due]
+kind = "human_gate"
+config = { }
+next = { done = "end", postponed = "end" }

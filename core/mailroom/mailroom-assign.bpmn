@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:aimn="https://aitmation.com/schema/aimn/1" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="defs_mailroom-assign" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="mailroom-assign" name="Eingang zuordnen" isExecutable="true" aimn:version="1">
+    <bpmn:documentation>The Vermittler process (docs/VERMITTLER.md). An instance becomes the
+Vermittler by loading THIS template set (AITMATION_TEMPLATES_DIR points
+here) - never alongside the Mandant templates, since both watch the inbox.
+
+Escalation ladder: a standing mandate (deterministic envelope rule,
+ADR-0016) delivers without a gate; a model proposal or nothing at all
+lands at the addressing gate. "assigned" is the approving outcome: the
+human assignment IS the approval of the delivery (ADR-0007).
+The forward action moves the files - the Vermittler keeps no copies.</bpmn:documentation>
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Eingang zuordnen</aimn:title>
+        <aimn:description lang="de">Ordnet jedes eingehende Dokument einem Adressaten zu und stellt es zu.</aimn:description>
+      </aimn:meta>
+      <aimn:policy name="privacy">
+        <aimn:property name="category" value="internal" />
+      </aimn:policy>
+      <aimn:policy name="model">
+        <aimn:property name="confidence_threshold" value="0.7" />
+      </aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="intake" name="intake">
+      <bpmn:extensionElements>
+        <aimn:trigger source="folder" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>intake</bpmn:documentation>
+    </bpmn:startEvent>
+    <bpmn:task id="address" name="address">
+      <bpmn:extensionElements>
+        <aimn:aiTask>
+          <aimn:output name="addressee">id of the matching addressee, or 'unknown'</aimn:output>
+          <aimn:property name="assign" value="true" />
+        </aimn:aiTask>
+      </bpmn:extensionElements>
+      <bpmn:documentation>address</bpmn:documentation>
+    </bpmn:task>
+    <bpmn:userTask id="choose_addressee" name="choose_addressee">
+      <bpmn:extensionElements>
+        <aimn:gate approving="assigned">
+          <aimn:property name="addressing" value="true" />
+        </aimn:gate>
+      </bpmn:extensionElements>
+      <bpmn:documentation>choose_addressee</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="deliver" name="deliver">
+      <bpmn:extensionElements>
+        <aimn:toolCall action="forward" mandate="true" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>deliver</bpmn:documentation>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="flow_intake_fired" name="fired" sourceRef="intake" targetRef="address" />
+    <bpmn:sequenceFlow id="flow_address_rule" name="rule" sourceRef="address" targetRef="deliver" />
+    <bpmn:sequenceFlow id="flow_address_proposal" name="proposal" sourceRef="address" targetRef="choose_addressee" />
+    <bpmn:sequenceFlow id="flow_address_unknown" name="unknown" sourceRef="address" targetRef="choose_addressee" />
+    <bpmn:sequenceFlow id="flow_address_failed" name="failed" sourceRef="address" targetRef="choose_addressee" />
+    <bpmn:sequenceFlow id="flow_choose_addressee_assigned" name="assigned" sourceRef="choose_addressee" targetRef="deliver" />
+    <bpmn:endEvent id="finished" />
+    <bpmn:sequenceFlow id="flow_choose_addressee_discarded" name="discarded" sourceRef="choose_addressee" targetRef="finished" />
+    <bpmn:sequenceFlow id="flow_deliver_done" name="done" sourceRef="deliver" targetRef="finished" />
+    <bpmn:sequenceFlow id="flow_deliver_failed" name="failed" sourceRef="deliver" targetRef="finished" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram_mailroom-assign">
+    <bpmndi:BPMNPlane id="plane_mailroom-assign" bpmnElement="mailroom-assign">
+      <bpmndi:BPMNShape id="shape_intake" bpmnElement="intake">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_address" bpmnElement="address">
+        <dc:Bounds x="360" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_deliver" bpmnElement="deliver">
+        <dc:Bounds x="560" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_choose_addressee" bpmnElement="choose_addressee">
+        <dc:Bounds x="560" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finished" bpmnElement="finished">
+        <dc:Bounds x="760" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_intake_fired" bpmnElement="flow_intake_fired">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="360" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_address_rule" bpmnElement="flow_address_rule">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_address_proposal" bpmnElement="flow_address_proposal">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_address_unknown" bpmnElement="flow_address_unknown">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_address_failed" bpmnElement="flow_address_failed">
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="560" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_choose_addressee_assigned" bpmnElement="flow_choose_addressee_assigned">
+        <di:waypoint x="660" y="290" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_choose_addressee_discarded" bpmnElement="flow_choose_addressee_discarded">
+        <di:waypoint x="660" y="290" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_deliver_done" bpmnElement="flow_deliver_done">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_deliver_failed" bpmnElement="flow_deliver_failed">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:aimn="https://aitmation.com/schema/aimn/1" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="defs_follow-up" targetNamespace="https://aitmation.com/solutions">
+  <bpmn:process id="follow-up" name="Wiedervorlage" isExecutable="true" aimn:version="1">
+    <bpmn:extensionElements>
+      <aimn:meta>
+        <aimn:title lang="de">Wiedervorlage</aimn:title>
+        <aimn:title lang="fr">Rappel à échéance</aimn:title>
+        <aimn:title lang="it">Scadenza</aimn:title>
+        <aimn:title lang="en">Follow-up</aimn:title>
+        <aimn:description lang="de">Erinnert am gewählten Tag an eine Frist oder ein Dokument und fragt, ob es erledigt ist.</aimn:description>
+        <aimn:description lang="fr">Rappelle une échéance ou un document au jour choisi et demande si c'est réglé.</aimn:description>
+        <aimn:description lang="it">Ricorda una scadenza o un documento nel giorno scelto e chiede se è sbrigato.</aimn:description>
+        <aimn:description lang="en">Brings a deadline or a document back on the chosen day and asks whether it is done.</aimn:description>
+      </aimn:meta>
+      <aimn:policy name="sla">
+        <aimn:property name="remind_after_hours" value="24" />
+        <aimn:property name="escalate_after_hours" value="72" />
+      </aimn:policy>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="start" name="start">
+      <bpmn:extensionElements>
+        <aimn:trigger source="manual" />
+      </bpmn:extensionElements>
+      <bpmn:documentation>start</bpmn:documentation>
+    </bpmn:startEvent>
+    <bpmn:intermediateCatchEvent id="wait" name="wait">
+      <bpmn:timerEventDefinition />
+      <bpmn:extensionElements>
+        <aimn:timer>
+          <aimn:property name="until_from" value="due_at" />
+          <aimn:property name="seconds" value="0" />
+        </aimn:timer>
+      </bpmn:extensionElements>
+      <bpmn:documentation>wait</bpmn:documentation>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="due" name="due">
+      <bpmn:extensionElements>
+        <aimn:gate />
+      </bpmn:extensionElements>
+      <bpmn:documentation>due</bpmn:documentation>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="flow_start_fired" name="fired" sourceRef="start" targetRef="wait" />
+    <bpmn:sequenceFlow id="flow_wait_elapsed" name="elapsed" sourceRef="wait" targetRef="due" />
+    <bpmn:endEvent id="finished" />
+    <bpmn:sequenceFlow id="flow_due_done" name="done" sourceRef="due" targetRef="finished" />
+    <bpmn:sequenceFlow id="flow_due_postponed" name="postponed" sourceRef="due" targetRef="finished" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="diagram_follow-up">
+    <bpmndi:BPMNPlane id="plane_follow-up" bpmnElement="follow-up">
+      <bpmndi:BPMNShape id="shape_start" bpmnElement="start">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_wait" bpmnElement="wait">
+        <dc:Bounds x="360" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_due" bpmnElement="due">
+        <dc:Bounds x="560" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finished" bpmnElement="finished">
+        <dc:Bounds x="760" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_start_fired" bpmnElement="flow_start_fired">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="360" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_wait_elapsed" bpmnElement="flow_wait_elapsed">
+        <di:waypoint x="396" y="160" />
+        <di:waypoint x="560" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_due_done" bpmnElement="flow_due_done">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_due_postponed" bpmnElement="flow_due_postponed">
+        <di:waypoint x="660" y="160" />
+        <di:waypoint x="760" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

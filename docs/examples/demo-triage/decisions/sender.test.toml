@@ -1,0 +1,11 @@
+[[case]]
+id = "known-supplier"
+given = { inputs = { trigger = { sender = "ag-wartung" } } }
+[case.expect]
+outputs = { outcome = "known" }
+
+[[case]]
+id = "anyone-else-is-unknown"
+given = { inputs = { trigger = { sender = "someone" } } }
+[case.expect]
+outputs = { outcome = "unknown" }

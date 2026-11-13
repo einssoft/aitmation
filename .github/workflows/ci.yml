@@ -1,0 +1,76 @@
+# CI for all three parts (core, ui, launcher) on every push and pull request;
+# the release workflow (release.yml) builds the bundles.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: core/uv.lock
+      - run: uv sync --frozen --extra mcp
+      - run: uv run ruff check .
+      - name: license boundary (nothing open imports ee/)
+        run: uv run python ../scripts/check_ee_boundary.py
+      - run: uv run pytest -q
+      - name: validate app bundles
+        run: uv run python -m aitmation_core validate-app ../apps/*/
+      - name: validate solutions and run their proving runs
+        run: |
+          solutions=$(find ../apps ../docs/examples -mindepth 2 -maxdepth 2 -name solution.toml -exec dirname {} \; | sort)
+          uv run python -m aitmation_core validate-solution $solutions
+          for s in $solutions; do uv run python -m aitmation_core test "$s"; done
+
+  ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ui-dist
+          path: ui/dist
+          retention-days: 7
+
+  launcher:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: launcher/go.mod
+          cache-dependency-path: launcher/go.sum
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test ./...
+      - name: cross-compile
+        run: |
+          for target in windows/amd64 darwin/arm64 darwin/amd64 linux/amd64 linux/arm64; do
+            GOOS=${target%/*} GOARCH=${target#*/} CGO_ENABLED=0 go build -trimpath -o /dev/null . || exit 1
+          done

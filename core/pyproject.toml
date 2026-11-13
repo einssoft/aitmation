@@ -1,0 +1,90 @@
+# aitmation core – project definition.
+#
+# Tooling discipline (ADR-0003): uv with a committed lockfile from day one,
+# so the release bundle (python-build-standalone + dependencies) is
+# reproducible. The bundle build itself comes later; the lockfile guarantee
+# starts now.
+#
+# License: Apache 2.0 for everything outside ee/ (ADR-0009, decided
+# 2026-10-18). No copyleft dependencies - the guardrail stays.
+
+[project]
+name = "aitmation-core"
+version = "0.0.1"
+description = "Process core of aitmation: state machine, human gates, audit log, template loader. Domain-neutral by design."
+requires-python = ">=3.12"
+license = "Apache-2.0"
+readme = "README.md"
+# Runtime dependencies are added per session/feature, never speculatively.
+# fastapi/uvicorn: approval inbox + health endpoint (ADR-0011: web and
+# background work share one process). Both permissively licensed (MIT/BSD).
+# pdfplumber (MIT): PDF text layer; reportlab (BSD): PDF generation;
+# httpx (BSD): model API access. OCR runs outside the process (interface
+# only). cryptography (Apache/BSD): Ed25519 signatures on solutions from
+# the shop (ADR-0043). No copyleft (ADR-0009 guardrail).
+dependencies = [
+    "cryptography>=42",
+    "fastapi>=0.115",
+    "httpx>=0.27",
+    "pdfplumber>=0.11",
+    "reportlab>=4.2",
+    "uvicorn>=0.30",
+]
+
+# The MCP channel (ADR-0024: desktop assistants as a channel, never as the
+# model) is optional - an installation without one has no need for the
+# package. mcp is MIT.
+# Transcription (ADR-0030): faster-whisper is the in-process Whisper
+# backend, an optional extra because it pulls CTranslate2, ONNX Runtime
+# and PyAV (~300 MB). The alternative without any Python dependency is a
+# whisper.cpp binary next to the core (docs/DEPLOYMENT.md). faster-whisper
+# and CTranslate2 are MIT; PyAV is BSD but ships FFmpeg (LGPL) - noted for
+# the license decision (ADR-0009), which is why it stays an extra.
+[project.optional-dependencies]
+mcp = ["mcp>=2"]
+transcription = ["faster-whisper>=1.1"]
+# Knowledge spaces (ADR-0031): fastembed (Apache-2.0, ONNX Runtime, no
+# torch) adds local semantic search; without it the lexical index works.
+knowledge = ["fastembed>=0.7"]
+
+[dependency-groups]
+dev = [
+    "mcp>=2",
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aitmation_core"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Strict but pragmatic: correctness, bug-prone patterns, imports, naming,
+# modernization. Docstring style is not enforced by the linter; docstrings
+# and comments are written in English.
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test fixtures hold literal XML/DMN: readable markup beats wrapped lines.
+"tests/test_bpmn.py" = ["E501"]
+"tests/test_dmn.py" = ["E501"]
+"tests/test_solution.py" = ["E501"]
+"src/aitmation_core/scaffold.py" = ["E501"]  # XML scaffolds: one element per line
+"tests/test_composition.py" = ["E501"]
+"tests/test_parallel.py" = ["E501"]
+"tests/test_ai_security.py" = ["E501"]
+"tests/test_tools_external.py" = ["E501"]
+"tests/test_content_pipeline.py" = ["E501"]
+"tests/test_mcp_connector.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
