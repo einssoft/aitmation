@@ -139,6 +139,8 @@ def process_bpmn(
     *,
     ai_ref: str,
     source: str = "manual",
+    inputs: dict[str, str] | None = None,
+    outputs: dict[str, str] | None = None,
 ) -> str:
     """start -> AI step (briefing ``ai_ref``) -> human gate -> end, with a
     diagram so the canvas shows it at once. The AI step's failed outcome
@@ -148,6 +150,16 @@ def process_bpmn(
     if source not in ("manual", "chain", "folder", "mailbox", "schedule"):
         raise ScaffoldError(f"unknown trigger source {source!r}")
     names = _names(title, process_id)
+    contract = "\n".join(
+        [
+            f'        <aimn:input name="{escape(k)}">{escape(v)}</aimn:input>'
+            for k, v in (inputs or {"file": "Pfad zum Dokument"}).items()
+        ]
+        + [
+            f'        <aimn:output name="{escape(k)}">{escape(v)}</aimn:output>'
+            for k, v in (outputs or {"summary": "Zusammenfassung"}).items()
+        ]
+    )
     titles = "\n".join(
         f'        <aimn:title lang="{lang}">{escape(text)}</aimn:title>'
         for lang, text in names.items()
@@ -160,8 +172,7 @@ def process_bpmn(
 {titles}
       </aimn:meta>
       <aimn:contract>
-        <aimn:input name="file">Pfad zum Dokument</aimn:input>
-        <aimn:output name="summary">Zusammenfassung</aimn:output>
+{contract}
       </aimn:contract>
       <aimn:policy name="privacy">
         <aimn:property name="category" value="internal" />

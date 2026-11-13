@@ -44,7 +44,8 @@
     "operations": "Betrieb",
     "tasks": "Aufgaben",
     "record": "Meeting aufnehmen",
-    "mcp": "MCP-Server"
+    "mcp": "MCP-Server",
+    "processes": "Abläufe"
   },
   "household": {
     "all": "Alle Mandanten",
@@ -599,7 +600,8 @@
     "models": "Modellzugang: Anbieter, Zulassung, Region, Rechtsraum, Schlüssel.",
     "log": "Modellaufrufe und Diagnose-Ereignisse.",
     "setup": "Einrichtungs-Assistent: Mandanten, Profile, Verbindungen.",
-    "operations": "Was gelaufen ist, was gerade läuft und worauf es wartet, was als Nächstes dran ist, Fehler und Token-Verbrauch — auf einer Seite."
+    "operations": "Was gelaufen ist, was gerade läuft und worauf es wartet, was als Nächstes dran ist, Fehler und Token-Verbrauch — auf einer Seite.",
+    "processes": "Alle Abläufe der Instanz: wie sie starten, woraus sie bestehen, wo ein Mensch entscheidet."
   },
   "metrics": {
     "title": "Kennzahlen",
@@ -1425,6 +1427,24 @@
       "keptUnrecorded": "Prüffall angelegt, aber nicht aufgezeichnet: {reason}",
       "preview": "Vorschau",
       "notSent": "Dieses Werkzeug wirkt nach aussen. Hier wird nichts gesendet – so sähe der Aufruf aus:"
+    },
+    "processesIntro": "Ein Ablauf verbindet Bausteine zu etwas, das wirklich läuft: Auslöser, Agenten, Freigaben, Werkzeuge. Ein Klick öffnet ihn im Designer.",
+    "processFromAgent": "+ Aus einem Agenten",
+    "processOther": "Vorlage, Import, leer …",
+    "noProcesses": "Noch keine Abläufe.",
+    "stepsCount": "{n} Schritte",
+    "agentsCount": "{n} × Agent",
+    "gatesCount": "{n} × Freigabe",
+    "asProcess": "Als Ablauf verwenden",
+    "asProcessHint": "Legt einen Ablauf an: Startformular → dieser Agent → Freigabe. Was nach der Freigabe geschehen soll, ergänzen Sie im Designer.",
+    "source": {
+      "manual": "von Hand",
+      "schedule": "nach Zeitplan",
+      "folder": "Ordner",
+      "mailbox": "E-Mail",
+      "email": "E-Mail",
+      "chain": "aus einem Ablauf",
+      "other": "anderer Auslöser"
     }
   }
 }

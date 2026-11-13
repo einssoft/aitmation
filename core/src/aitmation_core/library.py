@@ -44,6 +44,14 @@ RESULT_FIELD = {
     "en": "the result, as text",
 }
 
+# The start form's one field of a process made from an agent.
+TEXT_INPUT = {
+    "de": "Der Text, den der Agent liest",
+    "fr": "Le texte que l'agent lit",
+    "it": "Il testo che l'agente legge",
+    "en": "The text the agent reads",
+}
+
 # The kinds a person picks a tool by (the workshop's tiles), in the
 # order they are offered.
 TOOL_KINDS = ("page", "search", "json", "api", "mcp", "client", "action")
@@ -185,6 +193,39 @@ def tools(apps: dict, writable, names) -> list[dict]:
                     "used_in": used.get(("tool", app.id, tool.id), []),
                 }
             )
+    rows.sort(key=lambda r: (not r["own"], r["solution"], r["id"]))
+    return rows
+
+
+def processes(apps: dict, writable, names) -> list[dict]:
+    """Every process of every format-2 solution, as the library lists it:
+    how it starts, what it is built from, whether it waits for a person."""
+    rows = []
+    for app in apps.values():
+        if getattr(app, "format", 2) != 2:
+            continue
+        for process_id, definition in app.templates.items():
+            steps = list(definition.steps.values())
+            startable = str(definition.meta.get("startable", "true")).lower() not in (
+                "false", "0", "no",
+            )
+            rows.append({
+                "id": process_id,
+                "solution": app.id,
+                "solution_name": names(app),
+                "writable": writable(app),
+                "own": app.id == OWN,
+                "title": definition.meta.get("title") or process_id,
+                "sources": sorted(definition.sources()),
+                "startable": startable,
+                "steps": len(steps),
+                "agents": sorted({
+                    str((s.config.get("briefing") or {}).get("id"))
+                    for s in steps if (s.config.get("briefing") or {}).get("id")
+                }),
+                "tools": sorted({str(s.config["tool"]) for s in steps if s.config.get("tool")}),
+                "gates": sum(1 for s in steps if s.kind.value == "human_gate"),
+            })
     rows.sort(key=lambda r: (not r["own"], r["solution"], r["id"]))
     return rows
 

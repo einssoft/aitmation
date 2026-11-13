@@ -10,7 +10,7 @@
 // behind an approval. The page says so where tools are chosen.
 import { ActionIcon, Alert, Anchor, Badge, Button, Card, Checkbox, Code, Group, MultiSelect, NumberInput, Select, SimpleGrid, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { AgentTry, BlockUse, LibraryAgent, LibraryTool, LibraryView, SolutionRow, ToolKind, ToolTry } from "../api/client";
 import { useI18n } from "../i18n";
 import { useRecordMember } from "./Records";
@@ -57,6 +57,48 @@ function UsedIn({ uses }: { uses: BlockUse[] }) {
 function Effect({ effect }: { effect: string }) {
   const { t } = useI18n();
   return effect === "read" ? <Badge color="blue" variant="light">{t("library.effect.read")}</Badge> : <Badge color="orange" variant="light">{t("library.effect.external")}</Badge>;
+}
+
+const designer = (solution: string, process: string) => `/workshop/solutions?solution=${encodeURIComponent(solution)}&kind=process&id=${encodeURIComponent(process)}`;
+
+// -- processes -------------------------------------------------------------------
+
+export function ProcessesPage() {
+  const { t, pick } = useI18n();
+  const { view, error } = useLibrary();
+  return (
+    <Stack>
+      <Group justify="space-between">
+        <Title order={2}>{t("nav.processes")}</Title>
+        <Group>
+          <Button variant="light" component={Link} to="/workshop/agents">{t("library.processFromAgent")}</Button>
+          <Button variant="light" component={Link} to="/workshop/solutions">{t("library.processOther")}</Button>
+        </Group>
+      </Group>
+      <Text c="dimmed">{t("library.processesIntro")}</Text>
+      {error && <Alert color="red">{error}</Alert>}
+      <SimpleGrid cols={{ base: 1, md: 2, xl: 3 }}>
+        {(view?.processes ?? []).map((p) => (
+          <Card key={`${p.solution}/${p.id}`} withBorder component={Link} to={designer(p.solution, p.id)} style={{ textDecoration: "none", color: "inherit" }}>
+            <Stack gap="xs">
+              <Group justify="space-between" wrap="nowrap">
+                <Text fw={600} truncate>{pick(p.title) || p.id}</Text>
+                <Origin block={p} />
+              </Group>
+              <Group gap="xs">
+                {p.sources.map((source) => <Badge key={source} variant="light" color="blue">{t(`library.source.${["manual", "schedule", "folder", "mailbox", "email", "chain"].includes(source) ? source : "other"}`)}</Badge>)}
+                <Badge variant="outline" color="gray">{t("library.stepsCount", { n: p.steps })}</Badge>
+                {p.agents.length > 0 && <Badge variant="outline" color="gray">{t("library.agentsCount", { n: p.agents.length })}</Badge>}
+                {p.tools.length > 0 && <Badge variant="outline" color="gray">{t("library.toolsCount", { n: p.tools.length })}</Badge>}
+                <Badge variant="outline" color={p.gates ? "teal" : "gray"}>{t("library.gatesCount", { n: p.gates })}</Badge>
+              </Group>
+            </Stack>
+          </Card>
+        ))}
+      </SimpleGrid>
+      {view && view.processes.length === 0 && <Text c="dimmed">{t("library.noProcesses")}</Text>}
+    </Stack>
+  );
 }
 
 // -- agents ----------------------------------------------------------------------
@@ -162,6 +204,19 @@ function AgentForm({ agent, view, onBack, onSaved, onCopy }: { agent: LibraryAge
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const readOnly = !agent.writable;
+  const navigate = useNavigate();
+  const asProcess = async () => {
+    if (!member) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const made = await member.client.agentAsProcess(agent.solution, agent.id, lang);
+      navigate(designer(made.solution, made.id));
+    } catch (err) {
+      setError(message(err));
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!member) return;
@@ -224,7 +279,12 @@ function AgentForm({ agent, view, onBack, onSaved, onCopy }: { agent: LibraryAge
           <Title order={2}>{text(name) || agent.id}</Title>
           <Origin block={agent} />
         </Group>
-        {readOnly ? <Button onClick={onCopy}>{t("library.copy")}</Button> : <Button loading={busy} disabled={!loaded} onClick={save}>{t("library.save")}</Button>}
+        {readOnly ? <Button onClick={onCopy}>{t("library.copy")}</Button> : (
+          <Group>
+            <Button variant="light" loading={busy} disabled={!loaded} onClick={asProcess} title={t("library.asProcessHint")}>{t("library.asProcess")}</Button>
+            <Button loading={busy} disabled={!loaded} onClick={save}>{t("library.save")}</Button>
+          </Group>
+        )}
       </Group>
       {readOnly && <Alert color="gray">{t("library.readOnly")}</Alert>}
       {error && <Alert color="red" style={{ whiteSpace: "pre-wrap" }}>{error}</Alert>}

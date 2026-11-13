@@ -251,6 +251,15 @@ class NewToolBody(BaseModel):
     actor: str = "ui"
 
 
+class AgentProcessBody(BaseModel):
+    """"Use as a process": the agent with a start form and an approval."""
+
+    solution: str
+    id: str
+    lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
+    actor: str = "ui"
+
+
 class TryAgentBody(BaseModel):
     solution: str
     id: str
@@ -3530,6 +3539,7 @@ def build_router(runtime: Runtime) -> APIRouter:
             "has_own": library.OWN in apps,
             "agents": library.agents(apps, _writable, _library_names),
             "tools": library.tools(apps, _writable, _library_names),
+            "processes": library.processes(apps, _writable, _library_names),
             "tool_kinds": list(library.TOOL_KINDS),
             "form_kinds": list(library.FORM_KINDS),
             "knowledge": [
@@ -3593,6 +3603,40 @@ def build_router(runtime: Runtime) -> APIRouter:
             f"tool {tool_id} in {app.id}",
         )
         return {"ok": True, "solution": app.id, "id": tool_id, "warnings": warnings}
+
+    @router.post("/library/agents/process", status_code=201)
+    def library_agent_process(body: AgentProcessBody, request: Request) -> dict:
+        """"Use as a process": start (a form with the text) -> the agent ->
+        an approval -> end, in the agent's solution - what makes an agent
+        run for real. Whatever shall happen after the approval (a tool
+        with an outside effect, a mail, a row) is added in the designer,
+        behind that gate."""
+        from . import scaffold
+
+        _require_admin(request)
+        app = _solution(body.solution)
+        if not _writable(app):
+            raise HTTPException(
+                status_code=409, detail="adapt a copy first: this solution is read-only"
+            )
+        briefing = app.briefings.get(body.id)
+        if briefing is None:
+            raise HTTPException(status_code=404, detail=f"no agent {body.id!r} in {app.id}")
+        process_id = _free_id(body.id + "-flow", set(runtime.engine.definitions))
+        title = briefing.name or {body.lang: body.id}
+        try:
+            text = scaffold.process_bpmn(
+                process_id, dict(title), ai_ref=body.id, source="manual",
+                inputs={"text": library.TEXT_INPUT.get(body.lang, library.TEXT_INPUT["en"])},
+                outputs=dict(briefing.output) or None,
+            )
+        except scaffold.ScaffoldError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        warnings = _write_validated(
+            app, {f"processes/{process_id}.bpmn": text}, actor_of(request, body.actor),
+            f"process {process_id} from agent {body.id} in {app.id}",
+        )
+        return {"ok": True, "solution": app.id, "id": process_id, "warnings": warnings}
 
     @router.post("/library/agents/try")
     def library_agent_try(body: TryAgentBody, request: Request) -> dict:

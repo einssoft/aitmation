@@ -44,7 +44,8 @@
     "operations": "Esercizio",
     "tasks": "Compiti",
     "record": "Registrare",
-    "mcp": "Server MCP"
+    "mcp": "Server MCP",
+    "processes": "Processi"
   },
   "household": {
     "all": "Tutti i mandanti",
@@ -599,7 +600,8 @@
     "models": "Accesso ai modelli: fornitore, abilitazione, regione, spazio giuridico, chiavi.",
     "log": "Chiamate ai modelli ed eventi di diagnostica.",
     "setup": "Assistente di configurazione: mandanti, profili, connessioni.",
-    "operations": "Cosa è girato, cosa gira e su cosa attende, cosa viene, errori e consumo di token — su una pagina."
+    "operations": "Cosa è girato, cosa gira e su cosa attende, cosa viene, errori e consumo di token — su una pagina.",
+    "processes": "Tutti i processi dell'istanza: come partono, di cosa sono fatti, dove decide una persona."
   },
   "metrics": {
     "title": "Indicatori",
@@ -1425,6 +1427,24 @@
       "keptUnrecorded": "Caso di prova creato, ma non registrato: {reason}",
       "preview": "Anteprima",
       "notSent": "Questo strumento agisce verso l'esterno. Qui non viene inviato nulla – ecco come sarebbe la chiamata:"
+    },
+    "processesIntro": "Un processo unisce gli elementi in qualcosa che funziona davvero: inneschi, agenti, approvazioni, strumenti. Un clic lo apre nel designer.",
+    "processFromAgent": "+ Da un agente",
+    "processOther": "Modello, importazione, vuoto …",
+    "noProcesses": "Ancora nessun processo.",
+    "stepsCount": "{n} passi",
+    "agentsCount": "{n} × agente",
+    "gatesCount": "{n} × approvazione",
+    "asProcess": "Usare come processo",
+    "asProcessHint": "Crea un processo: modulo di avvio → questo agente → approvazione. Ciò che deve accadere dopo l'approvazione si aggiunge nel designer.",
+    "source": {
+      "manual": "a mano",
+      "schedule": "secondo un orario",
+      "folder": "cartella",
+      "mailbox": "e-mail",
+      "email": "e-mail",
+      "chain": "da un processo",
+      "other": "altro innesco"
     }
   }
 }

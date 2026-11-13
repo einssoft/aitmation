@@ -794,11 +794,27 @@ export interface LibraryTool extends LibraryBlock {
   outputs: Record<string, string>;
 }
 
+export interface LibraryProcess {
+  id: string;
+  solution: string;
+  solution_name: Multilingual;
+  writable: boolean;
+  own: boolean;
+  title: Multilingual;
+  sources: string[];
+  startable: boolean;
+  steps: number;
+  agents: string[];
+  tools: string[];
+  gates: number;
+}
+
 export interface LibraryView {
   own: string;
   has_own: boolean;
   agents: LibraryAgent[];
   tools: LibraryTool[];
+  processes: LibraryProcess[];
   tool_kinds: ToolKind[];
   form_kinds: ToolKind[];
   knowledge: { id: string; title: Multilingual; data_class: string | null }[];
@@ -1299,6 +1315,8 @@ export class InstanceClient {
     this.call<{ ok: true; solution: string; id: string }>("/library/agents", { method: "POST", body: JSON.stringify(body) });
   createTool = (body: { kind: ToolKind; name: string; description: string; lang: string; form: Record<string, unknown> }) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/tools", { method: "POST", body: JSON.stringify(body) });
+  agentAsProcess = (solution: string, id: string, lang: string) =>
+    this.call<{ ok: true; solution: string; id: string }>("/library/agents/process", { method: "POST", body: JSON.stringify({ solution, id, lang }) });
   tryAgent = (solution: string, id: string, text: string) =>
     this.call<AgentTry>("/library/agents/try", { method: "POST", body: JSON.stringify({ solution, id, text }) });
   tryTool = (solution: string, id: string, inputs: Record<string, unknown>) =>

@@ -44,7 +44,8 @@
     "operations": "Exploitation",
     "tasks": "Tâches",
     "record": "Enregistrer",
-    "mcp": "Serveurs MCP"
+    "mcp": "Serveurs MCP",
+    "processes": "Processus"
   },
   "household": {
     "all": "Tous les mandants",
@@ -599,7 +600,8 @@
     "models": "Accès aux modèles : fournisseur, habilitation, région, espace juridique, clés.",
     "log": "Appels de modèles et événements de diagnostic.",
     "setup": "Assistant de configuration : mandants, profils, connexions.",
-    "operations": "Ce qui a tourné, ce qui tourne et sur quoi ça attend, ce qui vient, les erreurs et la consommation de jetons — sur une page."
+    "operations": "Ce qui a tourné, ce qui tourne et sur quoi ça attend, ce qui vient, les erreurs et la consommation de jetons — sur une page.",
+    "processes": "Tous les processus de l'instance : comment ils démarrent, de quoi ils sont faits, où une personne décide."
   },
   "metrics": {
     "title": "Indicateurs",
@@ -1425,6 +1427,24 @@
       "keptUnrecorded": "Cas d'épreuve créé, mais non enregistré : {reason}",
       "preview": "Aperçu",
       "notSent": "Cet outil agit vers l'extérieur. Rien n'est envoyé ici – voici à quoi ressemblerait l'appel :"
+    },
+    "processesIntro": "Un processus relie des éléments en quelque chose qui tourne vraiment : déclencheurs, agents, validations, outils. Un clic l'ouvre dans le designer.",
+    "processFromAgent": "+ À partir d'un agent",
+    "processOther": "Modèle, import, vide …",
+    "noProcesses": "Pas encore de processus.",
+    "stepsCount": "{n} étapes",
+    "agentsCount": "{n} × agent",
+    "gatesCount": "{n} × validation",
+    "asProcess": "Utiliser comme processus",
+    "asProcessHint": "Crée un processus : formulaire de départ → cet agent → validation. Ce qui doit se passer après la validation s'ajoute dans le designer.",
+    "source": {
+      "manual": "à la main",
+      "schedule": "selon un horaire",
+      "folder": "dossier",
+      "mailbox": "e-mail",
+      "email": "e-mail",
+      "chain": "depuis un processus",
+      "other": "autre déclencheur"
     }
   }
 }

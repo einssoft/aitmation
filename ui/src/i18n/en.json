@@ -44,7 +44,8 @@
     "operations": "Operations",
     "tasks": "Tasks",
     "record": "Record",
-    "mcp": "MCP servers"
+    "mcp": "MCP servers",
+    "processes": "Processes"
   },
   "household": {
     "all": "All mandants",
@@ -599,7 +600,8 @@
     "models": "Model access: provider, clearance, region, legal space, keys.",
     "log": "Model calls and diagnostic events.",
     "setup": "Setup assistant: clients, profiles, connections.",
-    "operations": "What ran, what is running and what it waits on, what comes next, errors and token usage — on one page."
+    "operations": "What ran, what is running and what it waits on, what comes next, errors and token usage — on one page.",
+    "processes": "Every process of the instance: how it starts, what it is built from, where a person decides."
   },
   "metrics": {
     "title": "Key figures",
@@ -1425,6 +1427,24 @@
       "keptUnrecorded": "Proving case created, but not recorded: {reason}",
       "preview": "Preview",
       "notSent": "This tool acts outside. Nothing is sent here – this is what the call would look like:"
+    },
+    "processesIntro": "A process joins blocks into something that really runs: triggers, agents, approvals, tools. One click opens it in the designer.",
+    "processFromAgent": "+ From an agent",
+    "processOther": "Template, import, empty …",
+    "noProcesses": "No processes yet.",
+    "stepsCount": "{n} steps",
+    "agentsCount": "{n} × agent",
+    "gatesCount": "{n} × approval",
+    "asProcess": "Use as a process",
+    "asProcessHint": "Creates a process: start form → this agent → approval. What shall happen after the approval, you add in the designer.",
+    "source": {
+      "manual": "by hand",
+      "schedule": "on a schedule",
+      "folder": "folder",
+      "mailbox": "e-mail",
+      "email": "e-mail",
+      "chain": "from a process",
+      "other": "other trigger"
     }
   }
 }

@@ -369,3 +369,35 @@ def test_a_reading_tool_is_called_and_an_acting_tool_only_previewed(trying):
     assert preview["request"]["url"] == "https://desk.example.org/v1/a%2Fb/tickets"
     assert preview["request"]["headers"] == ["Authorization"] and "desk_token" not in str(preview)
     assert preview["request"]["body"] == {"title": "Hallo"}
+
+
+def test_an_agent_becomes_a_process_with_an_approval(trying):
+    client, _runtime, _model = trying
+    made = client.post(
+        "/api/v1/library/agents", json={"name": "Offert-Prüfer", "purpose": "Prüft Offerten."}
+    ).json()
+    flow = client.post("/api/v1/library/agents/process", json={"solution": "own", "id": made["id"]})
+    assert flow.status_code == 201, flow.text
+    assert flow.json()["id"] == "offert-pruefer-flow" and flow.json()["solution"] == "own"
+    view = client.get("/api/v1/library").json()
+    row = next(p for p in view["processes"] if p["id"] == "offert-pruefer-flow")
+    assert row["own"] and row["agents"] == ["offert-pruefer"] and row["gates"] == 1
+    assert row["sources"] == ["manual"] and row["startable"] is True
+    agent = next(a for a in view["agents"] if a["id"] == "offert-pruefer")
+    assert [u["process"] for u in agent["used_in"]] == ["offert-pruefer-flow"]
+    # it runs: the agent prepares, then a person decides - nothing happens before
+    report = client.post(
+        "/api/v1/templates/offert-pruefer-flow/run", json={"payload": {"text": "Offerte 12"}}
+    ).json()
+    assert report["status"] == "waiting", report
+    assert report["waiting_on"] == [{"step_id": "review", "kind": "human_gate"}]
+    again = client.post(
+        "/api/v1/library/agents/process", json={"solution": "own", "id": made["id"]}
+    )
+    assert again.json()["id"] == "offert-pruefer-flow-2"  # a free id, never an overwrite
+    assert (
+        client.post(
+            "/api/v1/library/agents/process", json={"solution": "own", "id": "nope"}
+        ).status_code
+        == 404
+    )
