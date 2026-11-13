@@ -8,10 +8,10 @@
 // An agent here is a declared step, not a free actor: it uses reading
 // tools itself; a tool with an outside effect runs only in a process
 // behind an approval. The page says so where tools are chosen.
-import { ActionIcon, Alert, Anchor, Badge, Button, Card, Group, MultiSelect, NumberInput, Select, SimpleGrid, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import { ActionIcon, Alert, Anchor, Badge, Button, Card, Checkbox, Code, Group, MultiSelect, NumberInput, Select, SimpleGrid, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import type { BlockUse, LibraryAgent, LibraryTool, LibraryView, SolutionRow, ToolKind } from "../api/client";
+import type { AgentTry, BlockUse, LibraryAgent, LibraryTool, LibraryView, SolutionRow, ToolKind, ToolTry } from "../api/client";
 import { useI18n } from "../i18n";
 import { useRecordMember } from "./Records";
 
@@ -264,6 +264,7 @@ function AgentForm({ agent, view, onBack, onSaved, onCopy }: { agent: LibraryAge
               <Select label={t("library.modelRole")} description={t("library.modelRoleHint")} data={roles} value={modelRole || null} onChange={(v) => setModelRole(v ?? "")} readOnly={readOnly} />
             </Stack>
           </Card>
+          <TryAgent agent={agent} />
           <Card withBorder>
             <Stack gap="xs">
               <Title order={4}>{t("library.usedIn")}</Title>
@@ -272,6 +273,139 @@ function AgentForm({ agent, view, onBack, onSaved, onCopy }: { agent: LibraryAge
           </Card>
         </Stack>
       </SimpleGrid>
+    </Stack>
+  );
+}
+
+const show = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value, null, 2));
+
+/** Run the agent once on an example - the saved version, a real model
+ * call under every rule of a step, without a case - and keep what was
+ * tried as a proving case. */
+function TryAgent({ agent }: { agent: LibraryAgent }) {
+  const { t } = useI18n();
+  const member = useRecordMember();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [report, setReport] = useState<AgentTry | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [caseId, setCaseId] = useState("");
+  const [assert, setAssert] = useState<string[]>([]);
+  const [kept, setKept] = useState<string | null>(null);
+
+  const run = async () => {
+    if (!member) return;
+    setBusy(true);
+    setError(null);
+    setReport(null);
+    setKept(null);
+    try {
+      const result = await member.client.tryAgent(agent.solution, agent.id, text);
+      setReport(result);
+      setAssert([]);
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const keep = async () => {
+    if (!member || !report?.result) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const fields = Object.fromEntries(assert.map((k) => [k, report.result?.[k]]));
+      const result = await member.client.keepAgentCase(agent.solution, agent.id, { id: caseId, text, fields });
+      setKept(result.record_error ? t("library.try.keptUnrecorded", { reason: result.record_error }) : t(result.run?.ok === false ? "library.try.keptRed" : "library.try.kept", { id: result.id }));
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card withBorder>
+      <Stack gap="sm">
+        <Title order={4}>{t("library.try.title")}</Title>
+        <Text size="sm" c="dimmed">{t("library.try.agentHint")}</Text>
+        <Textarea autosize minRows={3} maxRows={12} placeholder={t("library.try.placeholder")} value={text} onChange={(e) => setText(e.currentTarget.value)} />
+        <Button w="fit-content" variant="light" loading={busy} disabled={!text.trim()} onClick={run}>{t("library.try.run")}</Button>
+        {error && <Alert color="red" style={{ whiteSpace: "pre-wrap" }}>{error}</Alert>}
+        {report && !report.ok && <Alert color="red" title={t("library.try.failed")}>{report.error}</Alert>}
+        {report?.ok && report.result && (
+          <Stack gap="xs">
+            {(report.flags ?? []).map((flag, i) => <Alert key={i} color="orange">{flag}</Alert>)}
+            {Object.entries(report.result).map(([key, value]) => (
+              <div key={key}>
+                <Group gap="xs">
+                  {agent.writable && agent.outputs.includes(key) && (
+                    <Checkbox size="xs" aria-label={t("library.try.assert", { field: key })} checked={assert.includes(key)} onChange={(e) => setAssert(e.currentTarget.checked ? [...assert, key] : assert.filter((k) => k !== key))} />
+                  )}
+                  <Text size="sm" fw={600}>{key}</Text>
+                </Group>
+                <Code block style={{ whiteSpace: "pre-wrap" }}>{show(value)}</Code>
+              </div>
+            ))}
+            <Text size="xs" c="dimmed">
+              {[report.model, report.ms != null ? `${report.ms} ms` : null, report.cost_chf != null ? `CHF ${report.cost_chf.toFixed(4)}` : null, (report.knowledge_sources?.length ?? 0) > 0 ? t("library.knowledgeCount", { n: report.knowledge_sources?.length ?? 0 }) : null].filter(Boolean).join(" · ")}
+            </Text>
+            {agent.writable && (
+              <Group align="flex-end">
+                <TextInput label={t("library.try.caseName")} description={t("library.try.caseHint")} placeholder="offerte-ohne-preis" value={caseId} onChange={(e) => setCaseId(e.currentTarget.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"))} style={{ flex: 1 }} />
+                <Button variant="light" loading={busy} disabled={!/^[a-z][a-z0-9-]{1,59}$/.test(caseId)} onClick={keep}>{t("library.try.keep")}</Button>
+              </Group>
+            )}
+            {kept && <Alert color="teal">{kept}</Alert>}
+          </Stack>
+        )}
+      </Stack>
+    </Card>
+  );
+}
+
+/** Run one tool on given inputs: a reading tool for real, a tool that
+ * acts outside only as a preview of the request - nothing is sent. */
+function TryTool({ tool }: { tool: LibraryTool }) {
+  const { t } = useI18n();
+  const member = useRecordMember();
+  const [inputs, setInputs] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [report, setReport] = useState<ToolTry | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const run = async () => {
+    if (!member) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setReport(await member.client.tryTool(tool.solution, tool.id, Object.fromEntries(Object.keys(tool.inputs).map((k) => [k, inputs[k] ?? ""]))));
+    } catch (err) {
+      setError(message(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Stack gap="xs">
+      {Object.entries(tool.inputs).map(([key, hint]) => (
+        <TextInput key={key} size="xs" label={key} description={hint !== key ? hint : undefined} value={inputs[key] ?? ""} onChange={(e) => setInputs({ ...inputs, [key]: e.currentTarget.value })} />
+      ))}
+      <Button size="xs" w="fit-content" variant="light" loading={busy} onClick={run}>{t(tool.effect === "read" ? "library.try.run" : "library.try.preview")}</Button>
+      {error && <Alert color="red">{error}</Alert>}
+      {report && !report.ok && <Alert color="red">{report.error}</Alert>}
+      {report?.ok && report.mode === "live" && (
+        <>
+          {(report.flags ?? []).map((flag, i) => <Alert key={i} color="orange">{flag}</Alert>)}
+          <Code block style={{ whiteSpace: "pre-wrap", maxHeight: 260, overflow: "auto" }}>{show(report.outputs)}</Code>
+          <Text size="xs" c="dimmed">{report.ms} ms</Text>
+        </>
+      )}
+      {report?.ok && report.mode === "preview" && (
+        <>
+          <Alert color="orange">{t("library.try.notSent")}</Alert>
+          <Code block style={{ whiteSpace: "pre-wrap" }}>{show(report.request)}</Code>
+        </>
+      )}
     </Stack>
   );
 }
@@ -310,6 +444,7 @@ export function ToolsPage() {
   const [draft, setDraft] = useState<ToolDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<string | null>(null);
+  const [trying, setTrying] = useState<string | null>(null);
 
   const create = async () => {
     if (!member || !draft) return;
@@ -419,7 +554,11 @@ export function ToolsPage() {
               <Group gap="xs">
                 <Anchor size="sm" component={Link} to={`/workshop/solutions?solution=${encodeURIComponent(tool.solution)}&kind=tool&id=${encodeURIComponent(tool.id)}`}>{t("library.openSource")}</Anchor>
                 {!tool.own && <Anchor size="sm" component="button" onClick={() => copy(tool)}>{t("library.copy")}</Anchor>}
+                {tool.kind !== "action" && tool.kind !== "client" && (
+                  <Anchor size="sm" component="button" onClick={() => setTrying(trying === `${tool.solution}/${tool.id}` ? null : `${tool.solution}/${tool.id}`)}>{t("library.try.title")}</Anchor>
+                )}
               </Group>
+              {trying === `${tool.solution}/${tool.id}` && <TryTool tool={tool} />}
             </Stack>
           </Card>
         ))}

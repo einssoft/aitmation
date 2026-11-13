@@ -1409,6 +1409,22 @@
         "title": "Core action",
         "text": "A built-in action of the core."
       }
+    },
+    "try": {
+      "title": "Try it",
+      "agentHint": "Runs once on the saved version – a real model call under every rule of a step, but without a case.",
+      "placeholder": "Paste an example: an e-mail, a request, the text of a document …",
+      "run": "Run",
+      "failed": "Did not run",
+      "assert": "Pin {field} in the proving case",
+      "caseName": "Keep as a proving case",
+      "caseHint": "A short name. Ticked fields must come out exactly like this from now on; the answer is recorded.",
+      "keep": "Keep",
+      "kept": "Proving case “{id}” created and recorded.",
+      "keptRed": "Proving case “{id}” created – the run after it was red.",
+      "keptUnrecorded": "Proving case created, but not recorded: {reason}",
+      "preview": "Preview",
+      "notSent": "This tool acts outside. Nothing is sent here – this is what the call would look like:"
     }
   }
 }

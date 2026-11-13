@@ -251,6 +251,29 @@ class NewToolBody(BaseModel):
     actor: str = "ui"
 
 
+class TryAgentBody(BaseModel):
+    solution: str
+    id: str
+    text: str = Field(min_length=1, max_length=60_000)
+
+
+class TryToolBody(BaseModel):
+    solution: str
+    id: str
+    inputs: dict = Field(default_factory=dict)
+
+
+class KeepCaseBody(BaseModel):
+    """What was just tried on an agent, kept as a proving case."""
+
+    id: str = Field(pattern=r"^[a-z][a-z0-9-]{1,59}$")
+    text: str = Field(min_length=1, max_length=60_000)
+    fields: dict = Field(default_factory=dict)
+    description: str = Field(default="", max_length=300)
+    record: bool = True
+    actor: str = "ui"
+
+
 class CopyBlockBody(BaseModel):
     """A block of an installed solution as an own, changeable copy."""
 
@@ -3570,6 +3593,100 @@ def build_router(runtime: Runtime) -> APIRouter:
             f"tool {tool_id} in {app.id}",
         )
         return {"ok": True, "solution": app.id, "id": tool_id, "warnings": warnings}
+
+    @router.post("/library/agents/try")
+    def library_agent_try(body: TryAgentBody, request: Request) -> dict:
+        """Run one agent once on one input (Runtime.try_agent): a real
+        model call under every rule of a step, without a case."""
+        _require_admin(request)
+        app = _solution(body.solution)
+        if body.id not in app.briefings:
+            raise HTTPException(status_code=404, detail=f"no agent {body.id!r} in {app.id}")
+        return runtime.try_agent(app.id, body.id, body.text)
+
+    @router.post("/library/tools/try")
+    def library_tool_try(body: TryToolBody, request: Request) -> dict:
+        """Run one tool once: a reading tool for real, a tool with an
+        outside effect only as a preview of the request (never sent)."""
+        _require_admin(request)
+        app = _solution(body.solution)
+        if body.id not in app.tools:
+            raise HTTPException(status_code=404, detail=f"no tool {body.id!r} in {app.id}")
+        return runtime.try_tool(app.id, body.id, body.inputs)
+
+    @router.post("/solutions/{app_id}/elements/ai/{element_id}/cases", status_code=201)
+    def solution_agent_case_create(
+        app_id: str, element_id: str, body: KeepCaseBody, request: Request
+    ) -> dict:
+        """"Keep as a proving case": the tried input and the confirmed
+        fields become a sidecar case of the agent; with ``record`` the
+        answer is recorded so the case replays without a model."""
+        from .apps import validate_app
+        from .testing import run_solution_tests
+
+        _require_admin(request)
+        app = _solution(app_id)
+        if not _writable(app):
+            raise HTTPException(status_code=409, detail="solution directory is not writable")
+        path = _element_path(app, "ai", element_id)
+        if any(c.id == body.id for c in app.sidecars):
+            raise HTTPException(status_code=409, detail=f"case {body.id!r} already exists")
+        unknown = [k for k in body.fields if k not in app.briefings[element_id].output]
+        if unknown:
+            raise HTTPException(status_code=422, detail=f"not a result field: {unknown}")
+        try:
+            block = library.agent_case(body.id, body.text, body.fields, body.description)
+        except library.LibraryError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        sidecar = path.with_name(path.name.replace(".aimn.toml", "") + ".test.toml")
+        previous = sidecar.read_text(encoding="utf-8") if sidecar.is_file() else None
+        head = previous if previous is not None else "# Sidecar cases (proving run).\n"
+        candidate = head.rstrip("\n") + "\n" + block
+        with tempfile.TemporaryDirectory(prefix="aitmation-case-") as scratch:
+            copy = Path(scratch) / app.path.name
+            shutil.copytree(app.path, copy, ignore=shutil.ignore_patterns(".git", "_to_delete"))
+            (copy / sidecar.relative_to(app.path)).write_text(candidate, encoding="utf-8")
+            report = validate_app(
+                copy, core_definitions=_core_definitions(),
+                provided={k: v for k, v in runtime.apps.items() if k != app.id},
+            )
+        if not report.ok:
+            raise HTTPException(
+                status_code=422, detail={"findings": [str(f) for f in report.errors]}
+            )
+        sidecar.write_text(candidate, encoding="utf-8")
+        try:
+            runtime.reload_templates()
+        except Exception as exc:
+            if previous is None:
+                sidecar.unlink(missing_ok=True)
+            else:
+                sidecar.write_text(previous, encoding="utf-8")
+            runtime.reload_templates()
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        runtime.diag(
+            "info", "workshop", "case_created", f"{body.id} for agent {element_id} in {app_id}",
+            actor=actor_of(request, body.actor),
+        )
+        result: dict = {"ok": True, "id": body.id}
+        if body.record and _proving_lock.acquire(blocking=False):
+            try:
+                client = None
+                try:
+                    client = runtime.try_client(app.id, element_id)
+                except Exception as exc:  # no model bound: the case stays, unrecorded
+                    result["record_error"] = str(exc)
+                if client is not None:
+                    run = run_solution_tests(
+                        app.path, configuration="test", only=body.id, record=True,
+                        inner_client=client, core_definitions=_core_definitions(),
+                        core_templates_dir=runtime.settings.templates_dir,
+                        dependencies={aid: a.path for aid, a in runtime.apps.items()},
+                    )
+                    result["run"] = run.to_dict()
+            finally:
+                _proving_lock.release()
+        return result
 
     @router.post("/library/copy", status_code=201)
     def library_copy(body: CopyBlockBody, request: Request) -> dict:

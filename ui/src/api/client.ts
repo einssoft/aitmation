@@ -804,6 +804,32 @@ export interface LibraryView {
   knowledge: { id: string; title: Multilingual; data_class: string | null }[];
 }
 
+export interface AgentTry {
+  run: string;
+  ok: boolean;
+  role: string | null;
+  result?: Record<string, unknown>;
+  error?: string;
+  model?: string;
+  confidence?: number;
+  cost_chf?: number | null;
+  ms?: number;
+  flags?: string[];
+  knowledge_sources?: { title?: string; url?: string }[];
+}
+
+export interface ToolTry {
+  ok: boolean;
+  mode: "live" | "preview" | "refused";
+  inputs?: Record<string, unknown>;
+  outputs?: Record<string, unknown>;
+  request?: Record<string, unknown>;
+  error?: string;
+  status?: number | null;
+  ms?: number;
+  flags?: string[];
+}
+
 export interface SolutionElement {
   id: string;
   kind: ElementKind;
@@ -1273,6 +1299,13 @@ export class InstanceClient {
     this.call<{ ok: true; solution: string; id: string }>("/library/agents", { method: "POST", body: JSON.stringify(body) });
   createTool = (body: { kind: ToolKind; name: string; description: string; lang: string; form: Record<string, unknown> }) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/tools", { method: "POST", body: JSON.stringify(body) });
+  tryAgent = (solution: string, id: string, text: string) =>
+    this.call<AgentTry>("/library/agents/try", { method: "POST", body: JSON.stringify({ solution, id, text }) });
+  tryTool = (solution: string, id: string, inputs: Record<string, unknown>) =>
+    this.call<ToolTry>("/library/tools/try", { method: "POST", body: JSON.stringify({ solution, id, inputs }) });
+  keepAgentCase = (solution: string, id: string, body: { id: string; text: string; fields: Record<string, unknown> }) =>
+    this.call<{ ok: true; id: string; run?: { ok: boolean }; record_error?: string }>(
+      `/solutions/${encodeURIComponent(solution)}/elements/ai/${encodeURIComponent(id)}/cases`, { method: "POST", body: JSON.stringify(body) });
   copyBlock = (solution: string, kind: "ai" | "tool", id: string) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/copy", { method: "POST", body: JSON.stringify({ solution, kind, id }) });
   mcpServers = () => this.call<{ stdio_allowed: boolean; servers: McpServerView[] }>("/mcp/servers");

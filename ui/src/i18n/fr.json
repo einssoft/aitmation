@@ -1409,6 +1409,22 @@
         "title": "Action du noyau",
         "text": "Une action intégrée du noyau."
       }
+    },
+    "try": {
+      "title": "Essayer",
+      "agentHint": "S'exécute une fois sur la version enregistrée – un vrai appel de modèle avec toutes les règles d'une étape, mais sans dossier.",
+      "placeholder": "Coller un exemple : un e-mail, une demande, le texte d'un document …",
+      "run": "Exécuter",
+      "failed": "Pas exécuté",
+      "assert": "Fixer {field} dans le cas d'épreuve",
+      "caseName": "Garder comme cas d'épreuve",
+      "caseHint": "Un nom court. Les champs cochés devront désormais sortir exactement ainsi ; la réponse est enregistrée.",
+      "keep": "Garder",
+      "kept": "Cas d'épreuve « {id} » créé et enregistré.",
+      "keptRed": "Cas d'épreuve « {id} » créé – l'exécution suivante était rouge.",
+      "keptUnrecorded": "Cas d'épreuve créé, mais non enregistré : {reason}",
+      "preview": "Aperçu",
+      "notSent": "Cet outil agit vers l'extérieur. Rien n'est envoyé ici – voici à quoi ressemblerait l'appel :"
     }
   }
 }

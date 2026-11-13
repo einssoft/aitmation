@@ -2325,6 +2325,175 @@ class Runtime:
             row_id=step["id"],
         )
 
+    # -- trying a building block (ADR-0067, stage 2) -----------------------
+
+    def try_agent(self, app_id: str, agent_id: str, text: str, *, name: str = "try.txt") -> dict:
+        """One agent on one input, outside any process: what the workshop's
+        "try it" runs. No case, no audit entry - but the same call path as
+        a step (:meth:`_call_model`: dominance rule, jurisdiction, budget,
+        guardrails, content trail under a ``try-…`` id), the same role
+        binding and the same knowledge retrieval. The input is shaped as a
+        sidecar case shapes it (``given.text``), so what was tried can be
+        kept as a proving case and replays against the same prompt hash.
+
+        The agent only reads and proposes here, as everywhere: tools are
+        named to it, none is called."""
+        from .definition import END, StepDefinition
+        from .template import _substitute
+
+        app = self.apps[app_id]
+        briefing = app.briefings[agent_id]
+        config = _substitute(
+            briefing.to_config(app.skills), None, f"ai/{agent_id}", agent_id, app.constants
+        )
+        run_id = "try-" + uuid.uuid4().hex[:12]
+        definition = ProcessDefinition(
+            id=f"try:{run_id}", version=1,
+            steps={agent_id: StepDefinition(
+                id=agent_id, kind=StepKind.AGENT_STEP, next={"done": END}, config=config)},
+        )
+        step = {"case_id": run_id, "step_id": agent_id}
+        payload: dict = {"prior_steps": {}, "trigger": {"source": "try", "original_name": name}}
+        if config.get("read_document") or (config.get("context") or {}).get("document"):
+            payload["documents"] = [{"name": name, "method": "text", "text": text}]
+        else:
+            payload["text"] = text
+        report: dict = {"run": run_id, "prompt_hash": config.get("prompt_hash"), "ok": False,
+                        "role": self._role_of(config)}
+        started = time.perf_counter()
+        me = threading.get_ident()
+        with self.lock:
+            self.template_app[definition.id] = app_id
+            self._runners.add(me)  # the lock is let go around the model call, as in a run
+            try:
+                spaces = self._knowledge_spaces_of(config)
+                if spaces:
+                    payload["knowledge"] = self.knowledge.context(
+                        spaces, str(config.get("knowledge_query") or text)[:2000],
+                        top_k=int(config.get("knowledge_top_k") or DEFAULT_TOP_K),
+                        require_grounding=bool(config.get("require_grounding", False)),
+                        per_source=int(config.get("knowledge_per_source") or 0) or None,
+                        numbered=bool(config.get("knowledge_cite", False)),
+                    )
+                    report["knowledge_sources"] = _knowledge_sources(payload["knowledge"])
+                client = self._client_for(definition, config)
+                if client is None:
+                    raise ModelError(
+                        f"model role {report['role']!r} has no model - bind one under"
+                        " Verwaltung -> Modelle"
+                    )
+                reason = self._dominanz_violation(definition, config, client)
+                if reason:
+                    raise ModelError(reason)
+                response, _sent = self._call_model(
+                    definition, step, config, str(config.get("task", "")), payload,
+                    config.get("output"), client,
+                )
+                report.update(ok=True, result=response.data, model=response.model_ref,
+                              confidence=response.confidence,
+                              tokens_in=response.tokens_in, tokens_out=response.tokens_out)
+            except (ModelError, DocumentError, KnowledgeError, data_classes.DataClassError) as exc:
+                report["error"] = str(exc)
+            finally:
+                self._runners.discard(me)
+                self.template_app.pop(definition.id, None)
+                report["flags"] = self.pop_flags(run_id, agent_id)
+            row = self.conn.execute(
+                "SELECT kosten_chf FROM llm_interactions WHERE case_id = ?"
+                " ORDER BY at DESC LIMIT 1",
+                (run_id,),
+            ).fetchone()
+        report["cost_chf"] = row["kosten_chf"] if row else None
+        report["ms"] = round((time.perf_counter() - started) * 1000)
+        return report
+
+    def try_client(self, app_id: str, agent_id: str) -> ModelClient | None:
+        """The model that serves this agent's role in this instance - what
+        a recording of its proving case is taken through."""
+        from .definition import END, StepDefinition
+
+        config = self.apps[app_id].briefings[agent_id].to_config(self.apps[app_id].skills)
+        definition = ProcessDefinition(
+            id=f"try:client:{uuid.uuid4().hex[:8]}", version=1,
+            steps={agent_id: StepDefinition(
+                id=agent_id, kind=StepKind.AGENT_STEP, next={"done": END}, config=config)},
+        )
+        with self.lock:
+            self.template_app[definition.id] = app_id
+            try:
+                return self._client_for(definition, config)
+            finally:
+                self.template_app.pop(definition.id, None)
+
+    def try_tool(self, app_id: str, tool_id: str, inputs: dict) -> dict:
+        """One tool on given inputs. A tool that only reads (``effect =
+        "read"``: fetch, search) is really called - under the host policy,
+        and what it brings back is checked like any foreign content. A tool
+        with an outside effect is **never** called here: there is no gate
+        outside a process (ADR-0007), so the report only says what would be
+        sent where, with secrets shown as their names."""
+        from .connectors import ConnectorError, _render, fetch_json, fetch_page, search_web
+
+        app = self.apps[app_id]
+        tool = app.tools[tool_id]
+        missing = [k for k in tool.inputs if k not in inputs]
+        if missing:
+            return {"ok": False, "mode": "refused", "error": f"missing input(s): {missing}"}
+        given = {k: inputs[k] for k in tool.inputs}
+        if tool.effect != "read" or (tool.fetch is None and tool.search is None):
+            preview: dict = {}
+            try:
+                if tool.http is not None:
+                    preview = {
+                        "method": tool.http.method,
+                        "url": _render(
+                            tool.http.url, given, None, app.constants, quote_inputs=True
+                        ),
+                        "headers": sorted(tool.http.headers),
+                        "body": _render(tool.http.body, given, None, app.constants),
+                    }
+                elif tool.mcp is not None:
+                    preview = {"server": tool.mcp.server, "tool": tool.mcp.tool,
+                               "arguments": _render(tool.mcp.arguments, given, None, app.constants)}
+                elif tool.exec == "client":
+                    preview = {"instruction": pick(tool.description)}
+            except (ConnectorError, KeyError) as exc:
+                return {"ok": False, "mode": "refused", "error": str(exc)}
+            return {"ok": True, "mode": "preview", "inputs": given, "request": preview}
+        run_id = "try-" + uuid.uuid4().hex[:12]
+        started = time.perf_counter()
+        if tool.fetch is not None:
+            reader = fetch_json if tool.fetch.format == "json" else fetch_page
+            outcome = reader(
+                tool.fetch, given, transport=self._http_transport,
+                allow_private=self.settings.tools_allow_private_hosts,
+            )
+        else:
+            outcome = search_web(
+                tool.search, given,
+                lambda name: (
+                    resolve_secret(self.settings.data_dir, name) if is_tool_secret(name) else None
+                ),
+                transport=self._http_transport,
+                allow_private=self.settings.tools_allow_private_hosts,
+            )
+        report = {"ok": outcome.ok, "mode": "live", "inputs": given, "status": outcome.status,
+                  "ms": round((time.perf_counter() - started) * 1000)}
+        if not outcome.ok:
+            report["error"] = outcome.error
+            return report
+        report["outputs"] = outcome.outputs
+        check = guardrails.run(
+            "injection_suspect",
+            {f"try.{tool.id}": json.dumps(outcome.outputs, ensure_ascii=False)[:200_000]}, "pre",
+        )
+        report["flags"] = [check.detail] if check.action == "flag" else []
+        if report["flags"]:
+            with self.lock:
+                self.diag("warning", "security", "injection_suspect:flag", check.detail,
+                          case_id=run_id, step_id=tool.id, origin=f"try.{tool.id}")
+        return report
+
     # -- intake classification & dispatch (docs/AGENTIK.md) ----------------
 
     def _prepare_recordings(self, case_id: str) -> None:

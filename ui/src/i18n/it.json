@@ -1409,6 +1409,22 @@
         "title": "Azione del nucleo",
         "text": "Un'azione integrata del nucleo."
       }
+    },
+    "try": {
+      "title": "Provare",
+      "agentHint": "Viene eseguito una volta sulla versione salvata – una vera chiamata al modello con tutte le regole di un passo, ma senza pratica.",
+      "placeholder": "Incollare un esempio: un'e-mail, una richiesta, il testo di un documento …",
+      "run": "Eseguire",
+      "failed": "Non eseguito",
+      "assert": "Fissare {field} nel caso di prova",
+      "caseName": "Tenere come caso di prova",
+      "caseHint": "Un nome breve. I campi spuntati dovranno d'ora in poi risultare esattamente così; la risposta viene registrata.",
+      "keep": "Tenere",
+      "kept": "Caso di prova «{id}» creato e registrato.",
+      "keptRed": "Caso di prova «{id}» creato – l'esecuzione successiva era rossa.",
+      "keptUnrecorded": "Caso di prova creato, ma non registrato: {reason}",
+      "preview": "Anteprima",
+      "notSent": "Questo strumento agisce verso l'esterno. Qui non viene inviato nulla – ecco come sarebbe la chiamata:"
     }
   }
 }

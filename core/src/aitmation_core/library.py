@@ -380,3 +380,39 @@ def retitle(text: str, old_id: str, new_id: str) -> str:
     if pattern.search(text):
         return pattern.sub(rf'\1"{new_id}"', text, count=1)
     return f'id = "{new_id}"\n' + text
+
+
+# -- a tried input kept as a proving case ------------------------------------------
+
+
+def _toml(value) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int | float):
+        return repr(value)
+    if isinstance(value, str):
+        return _q(value)
+    if isinstance(value, list):
+        return "[" + ", ".join(_toml(v) for v in value) + "]"
+    if isinstance(value, dict):
+        return "{ " + ", ".join(f"{_key(str(k))} = {_toml(v)}" for k, v in value.items()) + " }"
+    raise LibraryError("expected values: text, numbers, yes/no, lists and tables of those")
+
+
+def agent_case(case_id: str, text: str, fields: dict, description: str = "") -> str:
+    """A sidecar case for an agent from what was just tried: the input as
+    ``given.text``, the fields the person confirmed as ``expect.fields``
+    (a subset - what is not named is not asserted)."""
+    if not re.fullmatch(r"[a-z][a-z0-9-]{1,59}", case_id):
+        raise LibraryError("case id: a-z, 0-9 and -, starting with a letter")
+    if not text.strip():
+        raise LibraryError("the case needs the input that was tried")
+    lines = ["", "[[case]]", f"id = {_q(case_id)}"]
+    if description.strip():
+        lines.append(f"description = {_q(_one_line(description, 300))}")
+    lines += [f"given = {{ text = {_q(text)} }}", "[case.expect]", 'outcome = "done"']
+    kept = {k: v for k, v in fields.items() if v is not None}
+    if kept:
+        lines.append(f"fields = {_toml(kept)}")
+    return "\n".join(lines) + "\n"
+

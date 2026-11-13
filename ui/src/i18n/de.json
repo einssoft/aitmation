@@ -1409,6 +1409,22 @@
         "title": "Kern-Aktion",
         "text": "Eine eingebaute Aktion des Kerns."
       }
+    },
+    "try": {
+      "title": "Ausprobieren",
+      "agentHint": "Läuft einmal mit dem gespeicherten Stand – ein echter Modellaufruf mit allen Regeln eines Schritts, aber ohne Vorgang.",
+      "placeholder": "Ein Beispiel einfügen: eine E-Mail, eine Anfrage, ein Dokumenttext …",
+      "run": "Ausführen",
+      "failed": "Nicht gelaufen",
+      "assert": "{field} im Prüffall festhalten",
+      "caseName": "Als Prüffall behalten",
+      "caseHint": "Kurzer Name. Angehakte Felder müssen künftig genau so herauskommen; die Antwort wird aufgezeichnet.",
+      "keep": "Behalten",
+      "kept": "Prüffall „{id}“ angelegt und aufgezeichnet.",
+      "keptRed": "Prüffall „{id}“ angelegt – der Lauf danach war rot.",
+      "keptUnrecorded": "Prüffall angelegt, aber nicht aufgezeichnet: {reason}",
+      "preview": "Vorschau",
+      "notSent": "Dieses Werkzeug wirkt nach aussen. Hier wird nichts gesendet – so sähe der Aufruf aus:"
     }
   }
 }
