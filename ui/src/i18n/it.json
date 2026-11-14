@@ -45,7 +45,8 @@
     "tasks": "Compiti",
     "record": "Registrare",
     "mcp": "Server MCP",
-    "processes": "Processi"
+    "processes": "Processi",
+    "projects": "Progetti"
   },
   "household": {
     "all": "Tutti i mandanti",
@@ -601,7 +602,8 @@
     "log": "Chiamate ai modelli ed eventi di diagnostica.",
     "setup": "Assistente di configurazione: mandanti, profili, connessioni.",
     "operations": "Cosa è girato, cosa gira e su cosa attende, cosa viene, errori e consumo di token — su una pagina.",
-    "processes": "Tutti i processi dell'istanza: come partono, di cosa sono fatti, dove decide una persona."
+    "processes": "Tutti i processi dell'istanza: come partono, di cosa sono fatti, dove decide una persona.",
+    "projects": "Ciò che ha costruito lei: per progetto i processi che vanno insieme, con i loro agenti e strumenti."
   },
   "metrics": {
     "title": "Indicatori",
@@ -1446,5 +1448,20 @@
       "chain": "da un processo",
       "other": "altro innesco"
     }
+  },
+  "projects": {
+    "intro": "Un progetto è il suo spazio per processi che vanno insieme – con gli agenti e gli strumenti di cui hanno bisogno. Le soluzioni prenotate sono sotto Apps; qui c'è ciò che costruisce lei.",
+    "new": "+ Nuovo progetto",
+    "none": "Ancora nessun progetto. Ne crei uno – oppure costruisca un agente, finirà in «blocchi propri».",
+    "description": "A cosa serve?",
+    "explorer": "Vedere tutti i file",
+    "newProcess": "+ Nuovo processo",
+    "processHint": "Per esempio «Verificare l'offerta». Il processo si apre poi nel designer.",
+    "newTool": "+ Nuovo strumento",
+    "noProcesses": "Ancora nessun processo in questo progetto.",
+    "noAgents": "Ancora nessun agente in questo progetto.",
+    "noTools": "Ancora nessuno strumento in questo progetto.",
+    "processesCount": "{n} processi",
+    "goesInto": "Sarà inserito nel progetto «{project}»."
   }
 }

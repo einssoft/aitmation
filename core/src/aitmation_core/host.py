@@ -468,7 +468,7 @@ class Host:
         and a solution no longer booked goes away."""
         if self.solutions_dir is None:
             return
-        marker = settings.apps_dir / ".host-solutions"
+        marker = settings.apps_dir / ".managed"
         previous = set(marker.read_text(encoding="utf-8").split()) if marker.is_file() else set()
         for gone in previous - set(tenant.solutions):
             if SLUG.match(gone):

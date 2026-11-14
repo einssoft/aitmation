@@ -45,7 +45,8 @@
     "tasks": "Aufgaben",
     "record": "Meeting aufnehmen",
     "mcp": "MCP-Server",
-    "processes": "Abläufe"
+    "processes": "Abläufe",
+    "projects": "Projekte"
   },
   "household": {
     "all": "Alle Mandanten",
@@ -601,7 +602,8 @@
     "log": "Modellaufrufe und Diagnose-Ereignisse.",
     "setup": "Einrichtungs-Assistent: Mandanten, Profile, Verbindungen.",
     "operations": "Was gelaufen ist, was gerade läuft und worauf es wartet, was als Nächstes dran ist, Fehler und Token-Verbrauch — auf einer Seite.",
-    "processes": "Alle Abläufe der Instanz: wie sie starten, woraus sie bestehen, wo ein Mensch entscheidet."
+    "processes": "Alle Abläufe der Instanz: wie sie starten, woraus sie bestehen, wo ein Mensch entscheidet.",
+    "projects": "Was Sie selbst gebaut haben: je Projekt die Abläufe, die zusammengehören, mit ihren Agenten und Werkzeugen."
   },
   "metrics": {
     "title": "Kennzahlen",
@@ -1446,5 +1448,20 @@
       "chain": "aus einem Ablauf",
       "other": "anderer Auslöser"
     }
+  },
+  "projects": {
+    "intro": "Ein Projekt ist Ihr eigener Arbeitsbereich für Abläufe, die zusammengehören – mit den Agenten und Werkzeugen, die sie brauchen. Gebuchte Lösungen stehen unter Apps; hier steht, was Sie selbst bauen.",
+    "new": "+ Neues Projekt",
+    "none": "Noch kein Projekt. Legen Sie eines an – oder bauen Sie einen Agenten, er landet in „Eigene Bausteine“.",
+    "description": "Wofür ist es da?",
+    "explorer": "Alle Dateien ansehen",
+    "newProcess": "+ Neuer Ablauf",
+    "processHint": "Zum Beispiel „Offerte prüfen“. Der Ablauf öffnet sich danach im Designer.",
+    "newTool": "+ Neues Werkzeug",
+    "noProcesses": "Noch kein Ablauf in diesem Projekt.",
+    "noAgents": "Noch kein Agent in diesem Projekt.",
+    "noTools": "Noch kein Werkzeug in diesem Projekt.",
+    "processesCount": "{n} Abläufe",
+    "goesInto": "Wird im Projekt „{project}“ abgelegt."
   }
 }

@@ -45,7 +45,8 @@
     "tasks": "Tasks",
     "record": "Record",
     "mcp": "MCP servers",
-    "processes": "Processes"
+    "processes": "Processes",
+    "projects": "Projects"
   },
   "household": {
     "all": "All mandants",
@@ -601,7 +602,8 @@
     "log": "Model calls and diagnostic events.",
     "setup": "Setup assistant: clients, profiles, connections.",
     "operations": "What ran, what is running and what it waits on, what comes next, errors and token usage — on one page.",
-    "processes": "Every process of the instance: how it starts, what it is built from, where a person decides."
+    "processes": "Every process of the instance: how it starts, what it is built from, where a person decides.",
+    "projects": "What you built yourself: per project the processes that belong together, with their agents and tools."
   },
   "metrics": {
     "title": "Key figures",
@@ -1446,5 +1448,20 @@
       "chain": "from a process",
       "other": "other trigger"
     }
+  },
+  "projects": {
+    "intro": "A project is your own place for processes that belong together – with the agents and tools they need. Booked solutions are under Apps; here is what you build yourself.",
+    "new": "+ New project",
+    "none": "No project yet. Create one – or build an agent, it goes into \"own blocks\".",
+    "description": "What is it for?",
+    "explorer": "See all files",
+    "newProcess": "+ New process",
+    "processHint": "For example \"Check quote\". The process then opens in the designer.",
+    "newTool": "+ New tool",
+    "noProcesses": "No process in this project yet.",
+    "noAgents": "No agent in this project yet.",
+    "noTools": "No tool in this project yet.",
+    "processesCount": "{n} processes",
+    "goesInto": "Goes into the project \"{project}\"."
   }
 }

@@ -45,7 +45,8 @@
     "tasks": "Tâches",
     "record": "Enregistrer",
     "mcp": "Serveurs MCP",
-    "processes": "Processus"
+    "processes": "Processus",
+    "projects": "Projets"
   },
   "household": {
     "all": "Tous les mandants",
@@ -601,7 +602,8 @@
     "log": "Appels de modèles et événements de diagnostic.",
     "setup": "Assistant de configuration : mandants, profils, connexions.",
     "operations": "Ce qui a tourné, ce qui tourne et sur quoi ça attend, ce qui vient, les erreurs et la consommation de jetons — sur une page.",
-    "processes": "Tous les processus de l'instance : comment ils démarrent, de quoi ils sont faits, où une personne décide."
+    "processes": "Tous les processus de l'instance : comment ils démarrent, de quoi ils sont faits, où une personne décide.",
+    "projects": "Ce que vous avez construit vous-même : par projet, les processus qui vont ensemble, avec leurs agents et outils."
   },
   "metrics": {
     "title": "Indicateurs",
@@ -1446,5 +1448,20 @@
       "chain": "depuis un processus",
       "other": "autre déclencheur"
     }
+  },
+  "projects": {
+    "intro": "Un projet est votre espace pour des processus qui vont ensemble – avec les agents et les outils dont ils ont besoin. Les solutions réservées sont sous Apps ; ici se trouve ce que vous construisez vous-même.",
+    "new": "+ Nouveau projet",
+    "none": "Pas encore de projet. Créez-en un – ou construisez un agent, il ira dans « blocs propres ».",
+    "description": "À quoi sert-il ?",
+    "explorer": "Voir tous les fichiers",
+    "newProcess": "+ Nouveau processus",
+    "processHint": "Par exemple « Vérifier l'offre ». Le processus s'ouvre ensuite dans le concepteur.",
+    "newTool": "+ Nouvel outil",
+    "noProcesses": "Pas encore de processus dans ce projet.",
+    "noAgents": "Pas encore d'agent dans ce projet.",
+    "noTools": "Pas encore d'outil dans ce projet.",
+    "processesCount": "{n} processus",
+    "goesInto": "Sera placé dans le projet « {project} »."
   }
 }

@@ -22,6 +22,7 @@ import { RecordPage } from "./pages/Record";
 import { TemplatesPage } from "./pages/Workshop";
 import { SolutionsPage } from "./pages/Solutions";
 import { AgentsPage, ProcessesPage, ToolsPage } from "./pages/Library";
+import { ProjectsPage } from "./pages/Projects";
 import { MetricsPage } from "./pages/Metrics";
 import { OperationsPage } from "./pages/Operations";
 import { KnowledgePage } from "./pages/Knowledge";
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="/workshop" element={<GroupOverview group={groupOf("/workshop")} />} />
                 <Route path="/workshop/solutions" element={<SolutionsPage />} />
                 <Route path="/workshop/templates" element={<TemplatesPage />} />
+                <Route path="/workshop/projects" element={<ProjectsPage />} />
                 <Route path="/workshop/processes" element={<ProcessesPage />} />
                 <Route path="/workshop/agents" element={<AgentsPage />} />
                 <Route path="/workshop/tools" element={<ToolsPage />} />

@@ -809,6 +809,18 @@ export interface LibraryProcess {
   gates: number;
 }
 
+/** Something built in this instance: a solution of its own with its processes, agents and tools. */
+export interface ProjectRow {
+  id: string;
+  name: Multilingual;
+  description: Multilingual;
+  own: boolean;
+  processes: string[];
+  agents: string[];
+  tools: string[];
+  decisions: string[];
+}
+
 export interface LibraryView {
   own: string;
   has_own: boolean;
@@ -1311,9 +1323,12 @@ export class InstanceClient {
     this.call<{ ok: true; id: string; files: string[]; warnings: string[]; findings?: string[]; draft?: DraftMeta }>(`/solutions/${encodeURIComponent(app)}/elements/process/import`, { method: "POST", body: JSON.stringify({ name, text }) });
   library = () => this.call<LibraryView>("/library");
   ensureOwnSolution = () => this.call<{ ok: true; solution: string }>("/library/own", { method: "POST", body: "{}" });
-  createAgent = (body: { name: string; purpose: string; lang: string }) =>
+  projects = () => this.call<ProjectRow[]>("/projects");
+  createProject = (body: { name: string; description: string; lang: string }) =>
+    this.call<ProjectRow>("/projects", { method: "POST", body: JSON.stringify(body) });
+  createAgent = (body: { name: string; purpose: string; lang: string; project?: string }) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/agents", { method: "POST", body: JSON.stringify(body) });
-  createTool = (body: { kind: ToolKind; name: string; description: string; lang: string; form: Record<string, unknown> }) =>
+  createTool = (body: { kind: ToolKind; name: string; description: string; lang: string; form: Record<string, unknown>; project?: string }) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/tools", { method: "POST", body: JSON.stringify(body) });
   agentAsProcess = (solution: string, id: string, lang: string) =>
     this.call<{ ok: true; solution: string; id: string }>("/library/agents/process", { method: "POST", body: JSON.stringify({ solution, id, lang }) });

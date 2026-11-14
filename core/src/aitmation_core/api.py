@@ -237,6 +237,19 @@ class NewAgentBody(BaseModel):
     purpose: str = Field(default="", max_length=400)
     instructions: str = Field(default="", max_length=8000)
     lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
+    # The project (a solution made here) the agent goes into; empty = the
+    # instance's "own blocks".
+    project: str = Field("", pattern=r"^([a-z0-9][a-z0-9_-]*)?$", max_length=60)
+    actor: str = "ui"
+
+
+class NewProjectBody(BaseModel):
+    """A project: a solution made in this instance - a place for the
+    processes, agents and tools that belong together."""
+
+    name: str = Field(min_length=2, max_length=80)
+    description: str = Field(default="", max_length=400)
+    lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
     actor: str = "ui"
 
 
@@ -248,6 +261,7 @@ class NewToolBody(BaseModel):
     description: str = Field(default="", max_length=400)
     lang: str = Field("de", pattern=r"^(de|fr|it|en)$")
     form: dict = Field(default_factory=dict)
+    project: str = Field("", pattern=r"^([a-z0-9][a-z0-9_-]*)?$", max_length=60)
     actor: str = "ui"
 
 
@@ -3523,6 +3537,36 @@ def build_router(runtime: Runtime) -> APIRouter:
             )
         return _solution(library.OWN)
 
+    def _project(request: Request, actor: str, project: str = ""):
+        """Where a new block goes: the named project (a solution that may
+        be changed here), or the instance's own blocks."""
+        if not project or project == library.OWN:
+            return _own_solution(request, actor)
+        app = runtime.apps.get(project)
+        if app is None or app.format != 2:
+            raise HTTPException(status_code=404, detail=f"no project {project!r}")
+        if not _is_project(app):
+            raise HTTPException(
+                status_code=409, detail="this solution was installed, not made here"
+            )
+        return app
+
+    def _is_project(app) -> bool:
+        """Made here: changeable, not signed by anyone, and not placed
+        in the apps directory by the installation (``.managed`` lists
+        what a shared host or the container start put there)."""
+        if app.format != 2 or not _writable(app):
+            return False
+        verdict = runtime.app_trust.get(app.id)
+        if verdict is not None and verdict.level != "local":
+            return False
+        marker = runtime.settings.apps_dir / ".managed"
+        try:
+            managed = set(marker.read_text(encoding="utf-8").split()) if marker.is_file() else set()
+        except OSError:
+            managed = set()
+        return app.id not in managed
+
     def _free_id(wanted: str, taken) -> str:
         candidate, n = wanted, 2
         while candidate in taken:
@@ -3549,6 +3593,46 @@ def build_router(runtime: Runtime) -> APIRouter:
             ],
         }
 
+    def _project_view(app) -> dict:
+        return {
+            "id": app.id,
+            "name": _library_names(app),
+            "description": _titles(app.manifest.description, ""),
+            "own": app.id == library.OWN,
+            "processes": sorted(app.templates),
+            "agents": sorted(app.briefings),
+            "tools": sorted(app.tools),
+            "decisions": sorted(app.decisions),
+        }
+
+    @router.get("/projects")
+    def projects() -> list[dict]:
+        """What was built here: every solution of this instance that is
+        its own work - a project holds processes with their agents and
+        tools. Installed solutions are not projects."""
+        rows = [_project_view(a) for a in runtime.apps.values() if _is_project(a)]
+        return sorted(rows, key=lambda r: (not r["own"], r["id"]))
+
+    @router.post("/projects", status_code=201)
+    def project_create(body: NewProjectBody, request: Request) -> dict:
+        _require_admin(request)
+        wanted = library.slug(body.name)
+        if not wanted:
+            raise HTTPException(status_code=422, detail="name: at least one letter")
+        taken = set(runtime.apps) | {CORE_SOLUTION, library.OWN}
+        if runtime.settings.apps_dir.is_dir():
+            taken |= {p.name for p in runtime.settings.apps_dir.iterdir()}
+        project_id = _free_id(wanted, taken)
+        name = " ".join(body.name.split())
+        description = " ".join(body.description.split())
+        solution_create(
+            NewSolutionBody(id=project_id, name={body.lang: name},
+                            description={body.lang: description} if description else "",
+                            actor=body.actor),
+            request,
+        )
+        return _project_view(_solution(project_id))
+
     @router.post("/library/own", status_code=201)
     def library_own(body: ActorBody, request: Request) -> dict:
         _require_admin(request)
@@ -3561,7 +3645,7 @@ def build_router(runtime: Runtime) -> APIRouter:
         from .aimn import Briefing, briefing_to_toml
 
         _require_admin(request)
-        app = _own_solution(request, body.actor)
+        app = _project(request, body.actor, body.project)
         wanted = library.slug(body.name)
         if not wanted:
             raise HTTPException(status_code=422, detail="name: at least one letter")
@@ -3587,7 +3671,7 @@ def build_router(runtime: Runtime) -> APIRouter:
     @router.post("/library/tools", status_code=201)
     def library_tool_create(body: NewToolBody, request: Request) -> dict:
         _require_admin(request)
-        app = _own_solution(request, body.actor)
+        app = _project(request, body.actor, body.project)
         wanted = library.slug(body.name)
         if not wanted:
             raise HTTPException(status_code=422, detail="name: at least one letter")

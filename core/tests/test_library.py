@@ -401,3 +401,55 @@ def test_an_agent_becomes_a_process_with_an_approval(trying):
         ).status_code
         == 404
     )
+
+
+def test_a_project_holds_what_was_built_here(world):
+    client, _runtime, apps = world
+    # an installed solution is not a project once the installation says it placed it
+    assert [p["id"] for p in client.get("/api/v1/projects").json()] == ["demo-triage"]
+    (apps / ".managed").write_text("demo-triage\n", encoding="utf-8")
+    assert client.get("/api/v1/projects").json() == []
+
+    made = client.post(
+        "/api/v1/projects",
+        json={"name": "Offerten & Aufträge", "description": "Vom Eingang bis zur Bestätigung"},
+    )
+    assert made.status_code == 201, made.text
+    project = made.json()
+    assert project["id"] == "offerten-auftraege" and not project["own"]
+    assert project["name"]["de"] == "Offerten & Aufträge"
+    assert (apps / "offerten-auftraege" / "solution.toml").is_file()
+    # the same name again gets a free id
+    again = client.post("/api/v1/projects", json={"name": "Offerten & Aufträge"}).json()
+    assert again["id"] == "offerten-auftraege-2"
+
+    # blocks go into the project they were made for
+    agent = client.post(
+        "/api/v1/library/agents", json={"name": "Prüfer", "project": "offerten-auftraege"}
+    ).json()
+    assert agent["solution"] == "offerten-auftraege"
+    tool = client.post(
+        "/api/v1/library/tools",
+        json={"kind": "page", "name": "Seite lesen", "project": "offerten-auftraege"},
+    ).json()
+    assert tool["solution"] == "offerten-auftraege"
+    process = client.post(
+        "/api/v1/solutions/offerten-auftraege/elements/process",
+        json={"id": "offerte-pruefen", "title": {"de": "Offerte prüfen"}},
+    )
+    assert process.status_code == 201, process.text
+    listed = {p["id"]: p for p in client.get("/api/v1/projects").json()}
+    assert "pruefer" in listed["offerten-auftraege"]["agents"]
+    assert "seite-lesen" in listed["offerten-auftraege"]["tools"]
+    assert "offerte-pruefen" in listed["offerten-auftraege"]["processes"]
+    # without a project a block lands in "own", which is the first project
+    client.post("/api/v1/library/agents", json={"name": "Ohne Projekt"})
+    rows = client.get("/api/v1/projects").json()
+    assert rows[0]["id"] == "own" and rows[0]["own"]
+    # nothing is built into an installed solution or an unknown project
+    assert client.post(
+        "/api/v1/library/agents", json={"name": "Fremd", "project": "demo-triage"}
+    ).status_code == 409
+    assert client.post(
+        "/api/v1/library/agents", json={"name": "Nirgends", "project": "nowhere"}
+    ).status_code == 404

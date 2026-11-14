@@ -107,7 +107,9 @@ export function AgentsPage() {
   const { t, pick, lang } = useI18n();
   const { member, view, error, setError, load } = useLibrary();
   const [params, setParams] = useSearchParams();
-  const [draft, setDraft] = useState<{ name: string; purpose: string } | null>(null);
+  // Coming from a project: the new agent goes there, the form is open.
+  const project = params.get("project") ?? "";
+  const [draft, setDraft] = useState<{ name: string; purpose: string } | null>(project ? { name: "", purpose: "" } : null);
   const [busy, setBusy] = useState(false);
   const selected = view?.agents.find((a) => a.solution === params.get("solution") && a.id === params.get("id"));
 
@@ -117,7 +119,7 @@ export function AgentsPage() {
     setBusy(true);
     setError(null);
     try {
-      const made = await member.client.createAgent({ ...draft, lang });
+      const made = await member.client.createAgent({ ...draft, lang, ...(project ? { project } : {}) });
       setDraft(null);
       load();
       open(made.solution, made.id);
@@ -153,6 +155,7 @@ export function AgentsPage() {
       {draft && (
         <Card withBorder>
           <Stack>
+            {project && <Text size="sm" c="dimmed">{t("projects.goesInto", { project })}</Text>}
             <TextInput label={t("library.name")} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.currentTarget.value })} autoFocus />
             <TextInput label={t("library.purpose")} description={t("library.purposeHint")} value={draft.purpose} onChange={(e) => setDraft({ ...draft, purpose: e.currentTarget.value })} />
             <Group>
@@ -501,6 +504,8 @@ function mapping(text: string): Record<string, string> {
 export function ToolsPage() {
   const { t, pick, lang } = useI18n();
   const { member, view, error, setError, load } = useLibrary();
+  const [params] = useSearchParams();
+  const project = params.get("project") ?? "";
   const [draft, setDraft] = useState<ToolDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<string | null>(null);
@@ -518,7 +523,7 @@ export function ToolsPage() {
       : draft.kind === "api" ? { url: draft.url, method: draft.method, params: list, secret: draft.secret, response: mapping(draft.response) }
       : {};
     try {
-      const result = await member.client.createTool({ kind: draft.kind, name: draft.name, description: draft.description, lang, form });
+      const result = await member.client.createTool({ kind: draft.kind, name: draft.name, description: draft.description, lang, form, ...(project ? { project } : {}) });
       setDraft(null);
       setMade(result.id);
       load();
@@ -545,6 +550,7 @@ export function ToolsPage() {
     <Stack>
       <Title order={2}>{t("nav.tools")}</Title>
       <Text c="dimmed">{t("library.toolsIntro")}</Text>
+      {project && <Alert color="blue">{t("projects.goesInto", { project })}</Alert>}
       {error && <Alert color="red" style={{ whiteSpace: "pre-wrap" }}>{error}</Alert>}
       {made && <Alert color="teal">{t("library.toolMade", { id: made })}</Alert>}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>

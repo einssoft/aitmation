@@ -46,6 +46,7 @@ export const GROUPS: NavGroup[] = [
     key: "workshop",
     advanced: true,
     children: [
+      { to: "/workshop/projects", key: "projects" },
       { to: "/workshop/processes", key: "processes" },
       { to: "/workshop/agents", key: "agents" },
       { to: "/workshop/tools", key: "tools" },
