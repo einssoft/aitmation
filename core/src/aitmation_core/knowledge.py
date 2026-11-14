@@ -34,6 +34,7 @@ import logging
 import math
 import re
 import sqlite3
+import threading
 import uuid
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -77,6 +78,12 @@ class Embedder(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 
+# One loaded model per (name, cache) in the process: several instances in
+# one host (host.py) share it instead of each holding its own copy.
+_shared_models: dict[tuple[str, str | None], object] = {}
+_shared_models_lock = threading.Lock()
+
+
 class FastembedEmbedder:
     """fastembed (ONNX, no torch) - the optional extra ``knowledge``. The
     model is fetched once into ``cache_dir`` and then used offline."""
@@ -110,9 +117,15 @@ class FastembedEmbedder:
             if self._loader is not None:
                 self._model = self._loader(self.model_name)
             else:
-                from fastembed import TextEmbedding
+                key = (self.model_name, self.cache_dir)
+                with _shared_models_lock:
+                    if key not in _shared_models:
+                        from fastembed import TextEmbedding
 
-                self._model = TextEmbedding(self.model_name, cache_dir=self.cache_dir)
+                        _shared_models[key] = TextEmbedding(
+                            self.model_name, cache_dir=self.cache_dir
+                        )
+                    self._model = _shared_models[key]
         return self._model
 
     def embed(self, texts: list[str]) -> list[list[float]]:

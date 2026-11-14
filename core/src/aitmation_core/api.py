@@ -4534,6 +4534,10 @@ def build_router(runtime: Runtime) -> APIRouter:
             id=addressee_id, title=body.title.strip(), path=body.path.strip(),
             channel=body.channel,
         )
+        if not runtime.path_allowed(addressee.path):
+            raise HTTPException(
+                status_code=422, detail="the delivery path must lie inside this instance's data"
+            )
         try:
             addressee.validate()
             save_addressee(settings.addressees_path, addressee)

@@ -148,6 +148,11 @@ class Settings:
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     # Built React shell (ui/dist); served under /app when present.
     ui_dir: Path | None = None
+    # Shared host (host.py): several instances live in one process. The
+    # embedding model's files are kept once for all of them, and every
+    # path a person can configure must stay inside this data directory.
+    embedding_cache_dir: Path | None = None
+    confine_paths: bool = False
 
     def __post_init__(self) -> None:
         if self.knowledge_dir is None:
@@ -365,4 +370,9 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
             )
         ),
         ui_dir=Path(str(values["ui_dir"])) if values.get("ui_dir") else None,
+        embedding_cache_dir=(
+            Path(str(values["embedding_cache_dir"]))
+            if values.get("embedding_cache_dir") else None
+        ),
+        confine_paths=_as_bool(values.get("confine_paths", False)),
     )

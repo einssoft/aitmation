@@ -156,6 +156,49 @@ credential, keep it out of repositories and logs. The assistant never
 decides by itself: the API only accepts decisions at open gates, and only
 envelopes (sender, subject, file name) travel, never document contents.
 
+## Shared host: many instances in one process
+
+`python -m aitmation_core host` serves many tenants from one process
+(`host.py`). The core itself still knows nothing of tenants: every tenant
+is a runtime on a directory of its own (`<root>/tenants/<slug>/data/`,
+its own SQLite file, files, knowledge, secrets), and requests for
+`/m/<slug>/…` reach that tenant's application - the address scheme the
+launcher uses for a household, so the shell works unchanged. A backup,
+an export or a move to an installation of its own is a copy of one
+directory.
+
+| Variable | Meaning |
+|---|---|
+| `AITMATION_HOST_ROOT` | where tenants live (default: `AITMATION_DATA_DIR`) |
+| `AITMATION_AUTH_SECRET` | signs sessions; required |
+| `AITMATION_HOST_KEY` | the operator's key for `/host/…`; required |
+| `AITMATION_LOGIN_URL` | where people sign in (your identity provider) |
+| `AITMATION_SOLUTIONS_DIR` | library of solutions a tenant can be given |
+| `AITMATION_HOST_BASE_SOLUTIONS` | comma list every new tenant starts with |
+| `AITMATION_HOST_IDLE_SECONDS` | quiet instances sleep after this (900) |
+| `AITMATION_HOST_MAX_TENANTS` | refuse new tenants beyond this (0 = no limit) |
+
+The operator's side (`Authorization: Bearer <AITMATION_HOST_KEY>`):
+`GET /host/status`, `GET /host/solutions`, `GET|PUT|DELETE
+/host/tenants/{slug}` (`title`, `type`, `language`, `enabled`,
+`solutions`, `budget_chf`), `GET /host/tenants/{slug}/export`. Deleting
+moves the directory to `<root>/removed/` - the host never deletes data.
+
+Signing in is not the host's business. An identity provider mints a
+token that lives at most two minutes, signed with `AITMATION_AUTH_SECRET`
+and carrying a role per instance (`"roles": {"acme": "admin", "shop":
+"member"}`), and sends the browser to `/sso?token=…`; the host trades it
+for a session. Every instance accepts only a role granted for itself -
+there is no admin-sees-everything in a shared host.
+
+What sharing a process changes: instances read secrets from their own
+`secrets.toml` only (the process environment is the operator's; lent are
+the model declared by `LLM_*`, at its address, and the transcription
+token), local MCP servers and private hosts stay off, configured paths
+must lie inside the instance, and `budget_chf` caps the operator's
+model per tenant. One clock ticks all instances in memory; quiet ones
+sleep until the next request.
+
 ## Develop
 
 You need [uv](https://docs.astral.sh/uv/); the Python version comes from

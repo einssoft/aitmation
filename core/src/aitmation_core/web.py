@@ -125,7 +125,16 @@ def create_app(
     mail_factory=None,
     auth_secret: str | None = None,
     intake_token: str | None = None,
+    access_key: str | None = None,
+    login_url: str | None = None,
+    scoped_roles: bool = False,
+    lifespan_tasks: bool = True,
 ) -> FastAPI:
+    """``access_key`` and ``login_url`` default to the environment; a
+    shared host (host.py) passes them, with ``scoped_roles`` (a session
+    counts only with a role for exactly this instance) and without the
+    app's own scheduler (``lifespan_tasks=False`` - the host keeps time
+    for all its instances)."""
     settings = runtime.settings
     if auth_secret is None:
         auth_secret = os.environ.get("AITMATION_AUTH_SECRET") or None
@@ -143,6 +152,9 @@ def create_app(
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI):
+        if not lifespan_tasks:
+            yield
+            return
         stop = asyncio.Event()
 
         async def scheduler() -> None:
@@ -201,14 +213,18 @@ def create_app(
     #    one shared lock for a container without launcher - Basic auth for a
     #    browser, ``Authorization: Bearer <password>`` for programs (the
     #    assistant, the gateway's callers). Not a user model.
-    access_key = os.environ.get("AITMATION_ACCESS_KEY", "").strip()
+    if access_key is None:
+        access_key = os.environ.get("AITMATION_ACCESS_KEY", "")
+    access_key = access_key.strip()
     key_user, _, key_password = access_key.partition(":")
     has_key = bool(access_key and key_password)
     secret_bytes = (
         (bytes.fromhex(auth_secret) if _is_hex(auth_secret) else auth_secret.encode())
         if auth_secret else b""
     )
-    app.state.login_url = os.environ.get("AITMATION_LOGIN_URL", "").strip()
+    if login_url is None:
+        login_url = os.environ.get("AITMATION_LOGIN_URL", "")
+    app.state.login_url = login_url.strip()
 
     def _access_ok(header: str) -> bool:
         if not has_key:
@@ -235,6 +251,8 @@ def create_app(
             principal = auth.verify(secret_bytes, token)
         except auth.AuthError:
             return None
+        if scoped_roles:
+            return principal.scoped(settings.instance_id)
         if not principal.may_access(settings.instance_id, settings.instance_type):
             return None
         return principal
@@ -297,12 +315,14 @@ def create_app(
         now = int(time.time())
         if principal.exp - now > SSO_LINK_SECONDS:
             raise HTTPException(401, "not a sign-on link")
-        if not principal.may_access(settings.instance_id, settings.instance_type):
+        allowed = (principal.scoped(settings.instance_id) is not None if scoped_roles
+                   else principal.may_access(settings.instance_id, settings.instance_type))
+        if not allowed:
             raise HTTPException(403, "this account has no access to this instance")
         session = auth.sign(
             secret_bytes,
             auth.Principal(principal.sub, principal.role, principal.instances,
-                           now + SESSION_SECONDS),
+                           now + SESSION_SECONDS, principal.roles),
         )
         target = next if next.startswith("/app") and "//" not in next else "/app/"
         response = RedirectResponse(target, status_code=303)

@@ -301,6 +301,10 @@ def main() -> None:
         sys.exit(import_workflow_command(sys.argv[2:]))
     if len(sys.argv) > 1 and sys.argv[1] == "build-catalog":
         sys.exit(build_catalog_command(sys.argv[2:]))
+    if len(sys.argv) > 1 and sys.argv[1] == "host":
+        from .host import main as host_main
+
+        sys.exit(host_main(sys.argv[2:]))
     if len(sys.argv) > 1 and sys.argv[1] == "mcp":
         from .mcp_server import main as mcp_main
 

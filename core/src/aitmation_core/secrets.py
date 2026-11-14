@@ -42,7 +42,7 @@ KNOWN_SECRETS = {
 def secret_status(data_dir: Path, env: dict[str, str] | None = None) -> dict[str, str]:
     """Where each known secret comes from: "env", "file" or "none". Values
     never leave this module - the UI only learns whether a key is set."""
-    env = dict(os.environ if env is None else env)
+    env = _process_env() if env is None else dict(env)
     from_file = load_file_secrets(data_dir)
     out: dict[str, str] = {}
     names = list(KNOWN_SECRETS) + sorted(n for n in from_file if n not in KNOWN_SECRETS)
@@ -58,6 +58,37 @@ def secret_status(data_dir: Path, env: dict[str, str] | None = None) -> dict[str
 
 def _secrets_path(data_dir: Path) -> Path:
     return data_dir / "secrets.toml"
+
+
+# In a shared host (host.py) the process environment belongs to the
+# operator, not to any one instance: with the environment ignored, an
+# instance reads its secrets from its own file only.
+_ignore_environment = False
+_lent: frozenset[str] = frozenset()
+
+
+def ignore_environment(ignore: bool = True, *, lend: tuple[str, ...] = ()) -> None:
+    """``lend`` names the secrets every instance may still read from the
+    environment - for services whose address the operator fixes too (the
+    transcription service's token, never a tool secret)."""
+    global _ignore_environment, _lent
+    _ignore_environment = ignore
+    _lent = frozenset(lend) if ignore else frozenset()
+
+
+def environment_ignored() -> bool:
+    return _ignore_environment
+
+
+def _process_env() -> dict[str, str]:
+    return {} if _ignore_environment else dict(os.environ)
+
+
+def operator_secret(name: str) -> str | None:
+    """A secret from the process environment whatever the policy - for the
+    one thing the operator of a shared host lends to every instance: the
+    model described by the LLM_* variables (providers.py)."""
+    return _from_env(name, dict(os.environ)) or None
 
 
 _TOOL_SECRET = re.compile(r"^[a-z][a-z0-9_]{1,60}$")
@@ -130,7 +161,11 @@ def _from_env(name: str, env: dict[str, str]) -> str:
 def resolve_secret(data_dir: Path, name: str, env: dict[str, str] | None = None) -> str | None:
     """Environment first (``AITMATION_…``, the provider's usual name, or
     ``LLM_API_KEY`` for the ``LLM_PROVIDER``), secrets file second."""
-    env = dict(os.environ if env is None else env)
+    if env is None and name in _lent:
+        lent = _from_env(name, dict(os.environ))
+        if lent:
+            return lent
+    env = _process_env() if env is None else dict(env)
     return _from_env(name, env) or load_file_secrets(data_dir).get(name)
 
 

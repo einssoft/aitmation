@@ -37,6 +37,10 @@ class Principal:
     role: str = "member"
     instances: tuple[str, ...] = field(default_factory=tuple)
     exp: int = 0
+    # Roles per instance - what a shared host goes by (host.py): one
+    # sign-in for several instances, a role of its own in each. A token
+    # without the map is a household token (one role everywhere).
+    roles: dict[str, str] = field(default_factory=dict)
 
     @property
     def is_admin(self) -> bool:
@@ -48,6 +52,15 @@ class Principal:
         if instance_type == "mailroom":
             return True
         return instance_id in self.instances
+
+    def scoped(self, instance_id: str) -> Principal | None:
+        """This person as one instance of a shared host sees them: the
+        role granted for exactly that instance, or None. Deliberately no
+        admin-sees-everything and no wildcard here."""
+        role = self.roles.get(instance_id)
+        if role not in ("admin", "member"):
+            return None
+        return Principal(self.sub, role, (instance_id,), self.exp, {instance_id: role})
 
 
 def _b64decode(part: str) -> bytes:
@@ -78,11 +91,13 @@ def verify(secret: bytes, token: str, *, now: float | None = None) -> Principal:
     if exp < (now if now is not None else time.time()):
         raise AuthError("token expired")
     instances = payload.get("instances") or []
+    roles = payload.get("roles")
     return Principal(
         sub=payload["sub"],
         role=str(payload.get("role") or "member"),
         instances=tuple(str(i) for i in instances),
         exp=exp,
+        roles={str(k): str(v) for k, v in roles.items()} if isinstance(roles, dict) else {},
     )
 
 
@@ -96,6 +111,8 @@ def sign(secret: bytes, principal: Principal) -> str:
         "exp": principal.exp,
         "iat": int(time.time()),
     }
+    if principal.roles:
+        payload["roles"] = dict(principal.roles)
     raw = json.dumps(payload, separators=(",", ":")).encode()
     body = f"{TOKEN_PREFIX}." + base64.urlsafe_b64encode(raw).decode().rstrip("=")
     mac = hmac.new(secret, body.encode(), hashlib.sha256).digest()

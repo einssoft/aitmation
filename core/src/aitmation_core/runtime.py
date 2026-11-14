@@ -524,6 +524,36 @@ class Runtime:
                 settings.templates_dir,
             )
 
+    def path_allowed(self, path: str | Path) -> bool:
+        """Whether a path a person configured may be used: anywhere on an
+        installation of one's own, only inside this instance's data
+        directory in a shared host (``confine_paths``)."""
+        if not self.settings.confine_paths:
+            return True
+        root = self.settings.data_dir.resolve()
+        try:
+            target = Path(path).expanduser().resolve()
+        except (OSError, RuntimeError):
+            return False
+        return target == root or root in target.parents
+
+    def quiescent(self) -> bool:
+        """Nothing here needs the clock: no open case, no schedule, no web
+        source, no mailbox. A shared host may then put the instance to
+        sleep until someone asks for it (host.py)."""
+        if self.mail_config.get("imap_host") or any(t.is_alive() for t in self._crawl_threads):
+            return False
+        with self.lock:
+            for query in (
+                "SELECT 1 FROM cases WHERE status = 'running' LIMIT 1",
+                "SELECT 1 FROM schedules LIMIT 1",
+                "SELECT 1 FROM knowledge_sources LIMIT 1",
+                "SELECT 1 FROM client_tasks WHERE status IN ('open', 'claimed') LIMIT 1",
+            ):
+                if self.conn.execute(query).fetchone() is not None:
+                    return False
+        return True
+
     def close(self) -> None:
         self._closing = True
         for thread in self._crawl_threads:
@@ -896,7 +926,8 @@ class Runtime:
         if self.settings.embeddings == "off":
             return None
         embedder = FastembedEmbedder(
-            self.settings.embedding_model, cache_dir=str(self.settings.data_dir / "models")
+            self.settings.embedding_model,
+            cache_dir=str(self.settings.embedding_cache_dir or self.settings.data_dir / "models"),
         )
         if embedder.available():
             log.info("knowledge: local embeddings via %s", embedder.name)
@@ -3114,6 +3145,8 @@ class Runtime:
         wanted = assignment.get("addressee", "")
         ids = list(wanted) if isinstance(wanted, list) else [wanted]
         targets = [self.addressees.get(i) for i in ids]
+        if any(t is not None and not self.path_allowed(t.path) for t in targets):
+            targets = [None]  # a shared host: nothing is delivered outside this instance
         if not ids or any(t is None for t in targets):
             self.engine.complete_step(
                 case_id,

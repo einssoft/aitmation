@@ -10,10 +10,19 @@ button in the UI go through :func:`client_for`.
 from __future__ import annotations
 
 import logging
+import os
 
+from . import secrets as secrets_module
 from .config import Settings
 from .model import AnthropicClient, ModelClient, ModelRouter, OllamaClient, OpenAICompatibleClient
-from .model_registry import ModelEntry, default_registry, load_registry, released
+from .model_registry import (
+    ModelEntry,
+    RegistryError,
+    default_registry,
+    env_entry,
+    load_registry,
+    released,
+)
 from .secrets import resolve_secret
 
 log = logging.getLogger("aitmation.providers")
@@ -32,10 +41,29 @@ def registry_of(settings: Settings) -> dict[str, ModelEntry]:
     return default_registry(settings.model_cheap, settings.model_strong)
 
 
+def _key_for(entry: ModelEntry, settings: Settings) -> str | None:
+    """The key of an entry's provider. In a shared host the environment is
+    not the instance's (secrets.ignore_environment) - except for the model
+    the operator declared there: exactly that entry, address included, so
+    an entry of the instance's own can never carry the operator's key to
+    another host."""
+    name = SECRET_FOR_PROVIDER[entry.provider]
+    key = resolve_secret(settings.data_dir, name)
+    if key or not secrets_module.environment_ignored():
+        return key
+    try:
+        lent = env_entry(dict(os.environ))
+    except RegistryError:
+        return None
+    if lent is not None and entry.id == lent.id and entry == lent:
+        return secrets_module.operator_secret(name)
+    return None
+
+
 def missing_secret(entry: ModelEntry, settings: Settings) -> str | None:
     """Name of the secret this entry needs but does not have, or None."""
     name = SECRET_FOR_PROVIDER.get(entry.provider)
-    if name and not resolve_secret(settings.data_dir, name):
+    if name and not _key_for(entry, settings):
         return name
     return None
 
@@ -45,8 +73,7 @@ def client_for(entry: ModelEntry, settings: Settings) -> ModelClient | None:
     base_url = entry.base_url or DEFAULT_BASE_URL[entry.provider]
     if entry.provider == "ollama":
         return OllamaClient(entry.model, base_url=base_url, clearance=entry.clearance)
-    secret_name = SECRET_FOR_PROVIDER[entry.provider]
-    api_key = resolve_secret(settings.data_dir, secret_name)
+    api_key = _key_for(entry, settings)
     if not api_key:
         return None
     if entry.provider == "anthropic":
