@@ -138,6 +138,8 @@ class Tenant:
     solutions: tuple[str, ...] = ()
     # CHF per month of the operator's model; 0 = no limit set here.
     budget_chf: float = 0.0
+    # Projects the tenant may build (0 = no limit) - what a free plan caps.
+    max_projects: int = 0
     created_at: str = ""
 
     def view(self) -> dict:
@@ -149,6 +151,7 @@ class Tenant:
             "enabled": self.enabled,
             "solutions": list(self.solutions),
             "budget_chf": self.budget_chf,
+            "max_projects": self.max_projects,
             "created_at": self.created_at,
         }
 
@@ -167,6 +170,7 @@ def _write_tenant(path: Path, tenant: Tenant) -> None:
         f"enabled = {'true' if tenant.enabled else 'false'}",
         "solutions = [" + ", ".join(_toml_string(s) for s in tenant.solutions) + "]",
         f"budget_chf = {float(tenant.budget_chf)}",
+        f"max_projects = {int(tenant.max_projects)}",
         f"created_at = {_toml_string(tenant.created_at)}",
     ]
     tmp = path.with_suffix(".tmp")
@@ -184,6 +188,7 @@ def _read_tenant(slug: str, path: Path) -> Tenant:
         enabled=bool(data.get("enabled", True)),
         solutions=tuple(str(s) for s in data.get("solutions", []) or []),
         budget_chf=float(data.get("budget_chf", 0.0) or 0.0),
+        max_projects=int(data.get("max_projects", 0) or 0),
         created_at=str(data.get("created_at", "")),
     )
 
@@ -376,6 +381,7 @@ class Host:
                 "enabled",
                 "solutions",
                 "budget_chf",
+                "max_projects",
             }
             if unknown:
                 raise HostError(f"unknown fields {sorted(unknown)}")
@@ -396,6 +402,11 @@ class Host:
                 if budget < 0:
                     raise HostError("budget_chf: not negative")
                 tenant.budget_chf = budget
+            if "max_projects" in values:
+                limit = int(values["max_projects"] or 0)
+                if limit < 0:
+                    raise HostError("max_projects: not negative")
+                tenant.max_projects = limit
             if "solutions" in values:
                 wanted = values["solutions"]
                 if not isinstance(wanted, list | tuple) or not all(
@@ -457,6 +468,7 @@ class Host:
                 "AITMATION_CONFINE_PATHS": "true",
             }
         )
+        env["AITMATION_MAX_PROJECTS"] = str(tenant.max_projects)
         if tenant.budget_chf > 0:
             env["AITMATION_MONTHLY_BUDGET_CHF"] = str(tenant.budget_chf)
             env["AITMATION_BUDGET_STOP"] = "true"

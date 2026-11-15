@@ -153,6 +153,9 @@ class Settings:
     # path a person can configure must stay inside this data directory.
     embedding_cache_dir: Path | None = None
     confine_paths: bool = False
+    # How many projects (solutions made here, "own blocks" included) this
+    # instance may hold; 0 = no limit. A free plan sets it (host.py).
+    max_projects: int = 0
 
     def __post_init__(self) -> None:
         if self.knowledge_dir is None:
@@ -375,4 +378,5 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
             if values.get("embedding_cache_dir") else None
         ),
         confine_paths=_as_bool(values.get("confine_paths", False)),
+        max_projects=int(values.get("max_projects", 0) or 0),
     )

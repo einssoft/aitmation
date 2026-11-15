@@ -362,3 +362,31 @@ def test_one_clock_ticks_every_instance_in_memory(host):
         while time.time() < deadline and min(seen.get("alpha", 0), seen.get("beta", 0)) < 3:
             time.sleep(0.02)
         assert seen.get("alpha", 0) >= 3 and seen.get("beta", 0) >= 3
+
+
+def test_a_free_plan_builds_one_project(host):
+    with TestClient(host) as client:
+        client.put("/host/tenants/alpha", headers=OPERATOR, json={"max_projects": 1})
+        client.put("/host/tenants/beta", headers=OPERATOR, json={})
+        a, b = _bearer({"alpha": "admin"}), _bearer({"beta": "admin"})
+        assert host.load("alpha").runtime.settings.max_projects == 1
+        first = client.post("/m/alpha/api/v1/projects", headers=a, json={"name": "Offerten"})
+        assert first.status_code == 201
+        second = client.post("/m/alpha/api/v1/projects", headers=a, json={"name": "Mahnungen"})
+        assert second.status_code == 409 and second.json()["detail"]["code"] == "project_limit"
+        # a block made without naming a project joins the one there is
+        agent = client.post("/m/alpha/api/v1/library/agents", headers=a, json={"name": "Helfer"})
+        assert agent.status_code == 201 and agent.json()["solution"] == "offerten"
+        listed = client.get("/m/alpha/api/v1/projects", headers=a).json()
+        assert [p["id"] for p in listed] == ["offerten"]
+        # booked solutions do not count, and the neighbour has no limit
+        assert (host.directory("alpha") / "data" / "apps" / "tasks").is_dir()
+        for name in ("Eins", "Zwei"):
+            made = client.post("/m/beta/api/v1/projects", headers=b, json={"name": name})
+            assert made.status_code == 201
+        # the plan changes: the limit goes with the next start
+        client.put("/host/tenants/alpha", headers=OPERATOR, json={"max_projects": 0})
+        more = client.post("/m/alpha/api/v1/projects", headers=a, json={"name": "Mahnungen"})
+        assert more.status_code == 201
+        bad = client.put("/host/tenants/alpha", headers=OPERATOR, json={"max_projects": -1})
+        assert bad.status_code == 422

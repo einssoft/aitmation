@@ -181,7 +181,7 @@ directory.
 The operator's side (`Authorization: Bearer <AITMATION_HOST_KEY>`):
 `GET /host/status`, `GET /host/solutions`, `GET|PUT|DELETE
 /host/tenants/{slug}` (`title`, `type`, `language`, `enabled`,
-`solutions`, `budget_chf`), `GET /host/tenants/{slug}/export`. Deleting
+`solutions`, `budget_chf`, `max_projects` - how many projects the tenant may build, 0 = no limit), `GET /host/tenants/{slug}/export`. Deleting
 moves the directory to `<root>/removed/` - the host never deletes data.
 
 Signing in is not the host's business. An identity provider mints a

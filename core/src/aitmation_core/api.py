@@ -3530,6 +3530,12 @@ def build_router(runtime: Runtime) -> APIRouter:
     def _own_solution(request: Request, actor: str):
         """The instance's solution for blocks made here - created on first use."""
         if library.OWN not in runtime.apps:
+            limit = runtime.settings.max_projects
+            mine = sorted((a for a in runtime.apps.values() if _is_project(a)), key=lambda a: a.id)
+            if limit and len(mine) >= limit:
+                # The plan's projects are used up: a block made without
+                # naming one joins the project there is, not a further one.
+                return mine[0]
             solution_create(
                 NewSolutionBody(id=library.OWN, name=library.OWN_NAMES,
                                 description=library.OWN_DESCRIPTIONS, actor=actor),
@@ -3550,6 +3556,16 @@ def build_router(runtime: Runtime) -> APIRouter:
                 status_code=409, detail="this solution was installed, not made here"
             )
         return app
+
+    def _room_for_project() -> None:
+        """A plan may cap the projects of an instance (``max_projects``)."""
+        limit = runtime.settings.max_projects
+        if limit and sum(1 for a in runtime.apps.values() if _is_project(a)) >= limit:
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "project_limit", "limit": limit,
+                        "message": f"this plan allows {limit} project(s)"},
+            )
 
     def _is_project(app) -> bool:
         """Made here: changeable, not signed by anyone, and not placed
@@ -3622,6 +3638,7 @@ def build_router(runtime: Runtime) -> APIRouter:
         taken = set(runtime.apps) | {CORE_SOLUTION, library.OWN}
         if runtime.settings.apps_dir.is_dir():
             taken |= {p.name for p in runtime.settings.apps_dir.iterdir()}
+        _room_for_project()
         project_id = _free_id(wanted, taken)
         name = " ".join(body.name.split())
         description = " ".join(body.description.split())
