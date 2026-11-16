@@ -577,9 +577,12 @@ def _skeleton(process: ET.Element, node: Node, anchor: int) -> ET.Element:
             raise GraphError(f"decision {node.id!r} needs a decision table (ref)")
         ET.SubElement(ext(), _a("decision"), {"ref": node.ref})
     elif node.kind == "call":
-        if not node.ref:
+        if element.find(f"{_b('extensionElements')}/{_a('extensionPoint')}") is not None:
+            pass  # an extension point calls whatever docks to it - no process of its own
+        elif not node.ref:
             raise GraphError(f"call {node.id!r} needs a process (ref)")
-        element.set("calledElement", node.ref)
+        else:
+            element.set("calledElement", node.ref)
     elif node.kind == "timer":
         timer = ET.SubElement(element, _b("timerEventDefinition"))
         ET.SubElement(timer, _b("timeDuration")).text = _iso_duration(

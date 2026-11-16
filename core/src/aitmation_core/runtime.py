@@ -58,6 +58,7 @@ from . import (
     schedule,
     trust,
 )
+from . import extensions as extension_points
 from . import mail as outbound
 from . import records as record_store
 from . import solution as solution_format
@@ -639,6 +640,19 @@ class Runtime:
         self.decisions = {
             did: decision for app in active.values() for did, decision in app.decisions.items()
         }
+        # What docks where (extensions.py): (process, point) -> declarations
+        # of the active solutions. A declaration whose host process is not
+        # active simply has nothing to dock to.
+        docked: dict[tuple[str, str], list[extension_points.Extension]] = {}
+        for app in active.values():
+            for extension in app.extensions.values():
+                host = merged.get(extension.extends)
+                if host is None or extension.point not in host.extension_points():
+                    continue
+                docked.setdefault((extension.extends, extension.point), []).append(
+                    replace(extension, app=app.id)
+                )
+        self.extensions = docked
         if active:
             log.info(
                 "loaded %d app(s): %s",
@@ -2924,6 +2938,10 @@ class Runtime:
                 self._route_case(step, definition, config)
                 count += 1
                 continue
+            if action == "extend":
+                self._extend_case(step, definition, config)
+                count += 1
+                continue
             if action == "call":
                 target = str(config.get("process", ""))
                 if target not in self.engine.definitions:
@@ -3048,6 +3066,108 @@ class Runtime:
                 "branches": {e["outcome"]: e["result"] for e in evaluated},
             },
             row_id=step["id"],
+        )
+
+    def _extend_case(self, step, definition: ProcessDefinition, config: dict) -> None:
+        """Internal action ``extend`` - an extension point of mode
+        ``takeover`` (extensions.py). Stage 1 asks no model: which docked
+        topics come into question for the text at all. None: outcome
+        ``none``, the process goes its own way. Otherwise one short model
+        call decides in context; the chosen module's process runs as a
+        child and the step completes with ``done`` and the fields the
+        point asks for. Whatever goes wrong on the way ends in ``none`` -
+        a module is an addition, never a reason for the process to fail."""
+        from . import dmn
+
+        case_id, step_id = step["case_id"], step["step_id"]
+        point = str(config.get("point", ""))
+        docked = [
+            e
+            for e in self.extensions.get((definition.id, point), [])
+            if e.process in self.engine.definitions
+        ]
+        context = self._decision_context(case_id, config)
+
+        def read(key: str):
+            return dmn.lookup(context, str(config[key])) if config.get(key) else None
+
+        text = str(read("text") or "")
+        found = extension_points.candidates(docked, text, str(read("last") or ""))
+        selection: dict = {
+            "point": point,
+            "docked": [e.id for e in docked],
+            "candidates": {c.extension.id: c.reason for c in found},
+            "chosen": None,
+            "stage": "prefilter",
+        }
+
+        def own_way(note: str = "", **extra) -> None:
+            if note:
+                selection["note"] = note
+            self.engine.complete_step(
+                case_id,
+                step_id,
+                extension_points.NONE,
+                result={"extension": selection},
+                audit_extra={
+                    "extension": {"point": point, "candidates": sorted(selection["candidates"]),
+                                  "stage": selection["stage"], "chosen": None}
+                },
+                row_id=step["id"],
+                **{"actor_type": "system", "actor_id": "extension-point", **extra},
+            )
+
+        if not found:
+            own_way()
+            return
+        selection["stage"] = "router"
+        router_config: dict = {}
+        if config.get("model_role"):
+            router_config["briefing"] = {"model_role": config["model_role"]}
+        if config.get("data_class"):
+            router_config["data_class"] = config["data_class"]
+        history = read("history")
+        payload: dict = {"text": text}
+        if isinstance(history, list) and history:
+            payload["history"] = history[-6:]
+        try:
+            client = self._client_for(definition, router_config)
+            if client is None:
+                own_way("no model is bound for the decision")
+                return
+            reason = self._dominanz_violation(definition, router_config)
+            if reason:
+                raise ModelError(reason)
+            lang = str(dmn.lookup(context, "trigger.lang") or "en")
+            response, payload = self._call_model(
+                definition, step, router_config, extension_points.router_task(found, lang),
+                payload, extension_points.ROUTER_OUTPUT, client=client,
+            )
+        except ModelError as exc:
+            self.diag(
+                "warning", "extension", "router_failed", str(exc),
+                case_id=case_id, step_id=step_id, template=definition.id,
+            )
+            own_way("the decision could not be made")
+            return
+        data = response.data if isinstance(response.data, dict) else {}
+        topic = str(data.get("topic", ""))
+        try:
+            sure = float(data.get("confidence", response.confidence))
+        except (TypeError, ValueError):
+            sure = 0.0
+        selection["router"] = {"topic": topic, "confidence": sure}
+        chosen = next((c.extension for c in found if c.extension.id == topic), None)
+        if chosen is None or sure < float(config.get("confidence", 0.5)):
+            own_way(actor_type="agent", actor_id="model-executor",
+                    model_ref=response.model_ref, payload=payload)
+            return
+        selection["chosen"] = chosen.id
+        selection["app"] = chosen.app
+        self.pop_flags(case_id, step_id)
+        self.engine.call_subprocess(
+            case_id, step_id, chosen.process,
+            note={"extension": selection}, returns=dict(chosen.returns),
         )
 
     def _decision_context(self, case_id: str, config: dict) -> dict:

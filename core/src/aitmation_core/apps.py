@@ -30,6 +30,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import __version__, aimn, schedule, solution, trust
+from . import extensions as extension_points
 from .bpmn import BpmnError, parse_bpmn
 from .data_classes import DataClassError, demand, rank
 from .definition import INTERNAL_ACTIONS, DefinitionError, ProcessDefinition, StepKind
@@ -167,6 +168,7 @@ class App:
     constants: dict = field(default_factory=dict)
     configurations: dict[str, solution.Configuration] = field(default_factory=dict)
     decisions: dict = field(default_factory=dict)
+    extensions: dict = field(default_factory=dict)  # id -> extensions.Extension
     sidecars: tuple[solution.SidecarCase, ...] = ()
     packages: dict[str, App] = field(default_factory=dict)
 
@@ -958,6 +960,7 @@ class _Scope:
     constants: dict = field(default_factory=dict)
     knowledge: dict[str, SpaceDeclaration] = field(default_factory=dict)
     decisions: dict = field(default_factory=dict)
+    extensions: dict = field(default_factory=dict)
     templates: dict[str, ProcessDefinition] = field(default_factory=dict)
     doctypes: dict[str, Doctype] = field(default_factory=dict)
     sidecars: list[solution.SidecarCase] = field(default_factory=list)
@@ -1047,6 +1050,7 @@ def _validate_v2(
         constants=flat.constants,
         configurations=configurations,
         decisions=flat.decisions,
+        extensions=flat.extensions,
         sidecars=tuple(flat.sidecars),
         packages={name: _package_summary(child) for name, child in root.children.items()},
     )
@@ -1056,7 +1060,7 @@ def _validate_v2(
 def _collect(scope: _Scope, into: _Scope) -> None:
     for name in (
         "briefings", "skills", "tools", "types", "records", "constants", "knowledge",
-        "decisions", "templates", "doctypes",
+        "decisions", "templates", "doctypes", "extensions",
     ):
         getattr(into, name).update(getattr(scope, name))
     into.sidecars.extend(scope.sidecars)
@@ -1069,6 +1073,7 @@ def _package_summary(scope: _Scope) -> dict:
         "where": scope.where,
         "processes": sorted(scope.templates),
         "decisions": sorted(scope.decisions),
+        "extensions": sorted(scope.extensions),
         "ai": sorted(scope.briefings),
         "skills": sorted(scope.skills),
         "tools": sorted(scope.tools),
@@ -1151,6 +1156,7 @@ def _parse_scope(
     own.constants = _parse_constants_dir(path / "constants", perror)
     own.knowledge = _parse_knowledge(path / "knowledge", perror, pwarning)
     own.decisions = _parse_decisions(path / "decisions", perror, pwarning)
+    own.extensions = _parse_extensions(path / "extensions", perror)
     for kind, table in (
         ("briefing", own.briefings),
         ("skill", own.skills),
@@ -1159,6 +1165,7 @@ def _parse_scope(
         ("record", own.records),
         ("knowledge space", own.knowledge),
         ("decision", own.decisions),
+        ("extension", own.extensions),
     ):
         for element_id in list(table):
             if not _unique(seen, kind, element_id, where or "<root>", error):
@@ -1245,6 +1252,27 @@ def _parse_scope(
                         f"processes/{definition.id}",
                         f"step {step.id!r} calls process {target!r} not in sight",
                     )
+    for eid, extension in list(own.extensions.items()):
+        sub = f"extensions/{eid}"
+        docked = own.templates.get(extension.process)
+        if docked is None:
+            perror(sub, f"process {extension.process!r} is not a process of this solution")
+            del own.extensions[eid]
+            continue
+        host = visible.templates.get(extension.extends) or core_definitions.get(extension.extends)
+        if host is None:
+            foreign(sub, f"extends process {extension.extends!r} not in sight")
+            continue
+        point = host.extension_points().get(extension.point)
+        if point is None:
+            perror(sub, f"process {extension.extends!r} has no extension point {extension.point!r}")
+            del own.extensions[eid]
+            continue
+        try:
+            extension_points.check_against_point(extension, point.config, set(docked.steps), sub)
+        except extension_points.ExtensionError as exc:
+            perror(sub, str(exc).removeprefix(f"{sub}: "))
+            del own.extensions[eid]
     own.doctypes = _parse_doctypes(
         path / "doctypes", visible.templates, core_definitions, perror, pwarning
     )
@@ -1336,7 +1364,10 @@ def _check_files_v2(path: Path, error, *, package: bool = False) -> None:
         if package and top in ("configurations", "tests", "samples", "cases"):
             error(str(rel), f"{top}/ belongs to the solution root, not to a package")
             continue
-        if top in {"types", "constants", "tools", "knowledge", "doctypes", "configurations", "ai"}:
+        if top in {
+            "types", "constants", "tools", "knowledge", "doctypes", "configurations", "ai",
+            "extensions",
+        }:
             if len(parts) != 2 or not item.name.endswith(".toml"):
                 error(str(rel), f"only *.toml files are allowed under {top}/")
         elif top == "processes":
@@ -1566,6 +1597,25 @@ def _parse_configurations(directory: Path, error) -> dict[str, solution.Configur
             error(where, f"configuration name {configuration.name!r} must equal the file name")
             continue
         out[configuration.name] = configuration
+    return out
+
+
+def _parse_extensions(directory: Path, error) -> dict:
+    """Declarations that dock a process of this solution onto an extension
+    point of another process (extensions.py)."""
+    out: dict = {}
+    if not directory.is_dir():
+        return out
+    for file in sorted(directory.glob("*.toml")):
+        where = f"extensions/{file.name}"
+        try:
+            extension = extension_points.parse_extension(
+                file.read_text(encoding="utf-8"), where, file.name.removesuffix(".toml")
+            )
+        except extension_points.ExtensionError as exc:
+            error(where, str(exc).removeprefix(f"{where}: "))
+            continue
+        out[extension.id] = extension
     return out
 
 

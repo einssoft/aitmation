@@ -28,7 +28,7 @@ sub-process starts with the hand-over payload (ADR-0014 chaining)."""
 INTERNAL_ACTIONS = frozenset(
     {
         "export", "archive", "dispatch", "decide", "call", "join", "record", "knowledge", "rows",
-        "links", "figures", "route", "file", "pdf",
+        "links", "figures", "route", "file", "pdf", "extend",
     }
 )
 """Built-in SystemActions that only write inside the instance's own data
@@ -46,7 +46,7 @@ files a text as a document into a declared knowledge space of our own
 (ADR-0031). This set lives in code on purpose - templates cannot declare
 themselves harmless."""
 
-SERIAL_ONLY_ACTIONS = frozenset({"forward", "call", "dispatch", "join"})
+SERIAL_ONLY_ACTIONS = frozenset({"forward", "call", "dispatch", "join", "extend"})
 """Actions that may never run inside a parallel branch or as a
 multi-instance step (ADR-0037 §4): they move files, start and wait for
 other cases, or synchronise - one at a time, visibly."""
@@ -147,6 +147,14 @@ class ProcessDefinition:
             str(step.config.get("process", ""))
             for step in self.steps.values()
             if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "call"
+        }
+
+    def extension_points(self) -> dict[str, StepDefinition]:
+        """Point name -> the step that carries it (extensions.py)."""
+        return {
+            str(step.config.get("point", "")): step
+            for step in self.steps.values()
+            if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "extend"
         }
 
     def joins(self) -> dict[str, tuple[str, str, tuple[str, ...]]]:
@@ -310,6 +318,15 @@ class ProcessDefinition:
                 raise DefinitionError(f"{self.id}: step key {key!r} != step id {step.id!r}")
             if not step.next:
                 raise DefinitionError(f"{self.id}: step {key!r} has no outcomes")
+            if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "extend":
+                # An extension point: "done" when a docked module took over,
+                # "none" when the process goes its own way (extensions.py).
+                missing = {"done", "none"} - set(step.next)
+                if missing:
+                    raise DefinitionError(
+                        f"{self.id}: extension point {key!r} needs the outcome(s)"
+                        f" {', '.join(sorted(missing))}"
+                    )
             for outcome, target in step.next.items():
                 if target is END or target in self.steps:
                     continue

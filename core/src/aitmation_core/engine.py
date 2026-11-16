@@ -495,12 +495,25 @@ class Engine:
             raise
         return new_case
 
-    def call_subprocess(self, case_id: str, step_id: str, template_id: str) -> str:
+    def call_subprocess(
+        self,
+        case_id: str,
+        step_id: str,
+        template_id: str,
+        *,
+        note: dict | None = None,
+        returns: dict[str, str] | None = None,
+    ) -> str:
         """Call activity (ADR-0034 §1): start ``template_id`` as a child of
         the pending ``call`` step and put that step to ``waiting``. The
         child shares the chain id; when it - or the chain it hands over
         to - completes, :meth:`_advance` completes the parent's step with
-        outcome ``done`` and the child's outputs as result."""
+        outcome ``done`` and the child's outputs as result.
+
+        ``note`` is kept in the step's result next to the outputs (why this
+        child was called); ``returns`` maps result fields to paths into the
+        child's outputs (``answer`` <- ``offer.text``), so the caller reads
+        ``steps.<id>.answer`` without knowing the child's steps."""
         definition, step = self._open_step(case_id, step_id, {"pending"})
         target = self._definition(template_id)
         chain_id = self._case(case_id)["chain_id"] or case_id
@@ -508,7 +521,11 @@ class Engine:
         handoff["source"] = "call"
         self.conn.execute("BEGIN")
         try:
-            self.conn.execute("UPDATE steps SET status = 'waiting' WHERE id = ?", (step["id"],))
+            held = {"note": note or {}, "returns": returns or {}} if (note or returns) else None
+            self.conn.execute(
+                "UPDATE steps SET status = 'waiting', result = ? WHERE id = ?",
+                (json.dumps(held, default=str) if held else None, step["id"]),
+            )
             self._audit(
                 case_id, "system", "engine", "subprocess_called",
                 {"step": step_id, "process": target.id},
@@ -541,15 +558,17 @@ class Engine:
         step_def = parent_definition.steps[parent_step]
         outcome = "done" if "done" in step_def.next else next(iter(step_def.next))
         now = _iso(self._now())
+        result: dict = {}
+        held = json.loads(row["result"]) if row["result"] else {}
+        if isinstance(held, dict):
+            result.update(held.get("note") or {})
+            for name, path in (held.get("returns") or {}).items():
+                result[name] = _lookup_path(outputs, path)
+        result.update({"child_case": case_id, "outputs": outputs})
         self.conn.execute(
             "UPDATE steps SET status = 'completed', outcome = ?, result = ?, finished_at = ?"
             " WHERE id = ?",
-            (
-                outcome,
-                json.dumps({"child_case": case_id, "outputs": outputs}, default=str),
-                now,
-                row["id"],
-            ),
+            (outcome, json.dumps(result, default=str), now, row["id"]),
         )
         self._audit(
             parent_case,

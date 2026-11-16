@@ -532,6 +532,16 @@ def _step_of_plain(
         return StepKind.SYSTEM_ACTION, config
     if tag == "callActivity":
         called = node.element.get("calledElement", "")
+        point = _extension(node, "extensionPoint")
+        if point is not None:
+            # An extension point: what runs here comes from the solutions
+            # enabled in the instance, not from this file (extensions.py).
+            if called:
+                raise BpmnError(
+                    f"{source}: callActivity {node.id!r} is an extension point and takes no"
+                    " calledElement"
+                )
+            return StepKind.SYSTEM_ACTION, _extension_point_config(node, point, source)
         if not called:
             raise BpmnError(f"{source}: callActivity {node.id!r} needs calledElement")
         config = props_to_dict(_extension(node, "call"))
@@ -554,6 +564,46 @@ def _step_of_plain(
             )
         return StepKind.TIMER, config
     raise BpmnError(f"{source}: bpmn:{tag} is not in the aitmation profile")
+
+
+_POINT_ATTRS = (
+    ("name", "point"), ("mode", "mode"), ("text", "text"), ("last", "last"),
+    ("history", "history"), ("modelRole", "model_role"), ("dataClass", "data_class"),
+)
+_POINT_PATH = re.compile(r"^(trigger|steps)\.[A-Za-z0-9_.]+$")
+
+
+def _extension_point_config(node: _Node, point: ET.Element, source: str) -> dict:
+    """``<aimn:extensionPoint name= mode= text= [last=] [history=]
+    [modelRole=] [dataClass=] [returns=] [confidence=]/>``."""
+    from .extensions import MODES
+
+    config: dict = {"action": "extend"}
+    for attr, key in _POINT_ATTRS:
+        if point.get(attr):
+            config[key] = point.get(attr)
+    where = f"{source}: extension point {node.id!r}"
+    if not re.fullmatch(r"[a-z][a-z0-9_-]*", config.get("point", "")):
+        raise BpmnError(f"{where} needs a name (lower case id)")
+    if config.get("mode") not in MODES:
+        raise BpmnError(f"{where}: mode is one of {', '.join(MODES)}")
+    if config["mode"] == "takeover" and not config.get("text"):
+        raise BpmnError(f"{where}: a takeover point names the text it decides on (text=…)")
+    for key in ("text", "last", "history"):
+        if key in config and not _POINT_PATH.match(config[key]):
+            raise BpmnError(f"{where}: {key} is a path like trigger.q or steps.x.y")
+    config["returns"] = [n.strip() for n in (point.get("returns") or "").split(",") if n.strip()]
+    for name in config["returns"]:
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", name):
+            raise BpmnError(f"{where}: returns lists field names, got {name!r}")
+    if point.get("confidence"):
+        try:
+            config["confidence"] = float(point.get("confidence", ""))
+        except ValueError as exc:
+            raise BpmnError(f"{where}: confidence is a number between 0 and 1") from exc
+        if not 0 <= config["confidence"] <= 1:
+            raise BpmnError(f"{where}: confidence is a number between 0 and 1")
+    return config
 
 
 def _ai_task_config(
@@ -1132,6 +1182,18 @@ def _write_step(
             ext = ET.SubElement(element, _b("extensionElements"))
             decision = ET.SubElement(ext, _a("decision"), {"ref": str(config.pop("decision"))})
             dict_to_props(decision, config)
+            return element
+        if action == "extend":
+            element = ET.SubElement(process, _b("callActivity"), {"id": step.id, "name": step.id})
+            ext = ET.SubElement(element, _b("extensionElements"))
+            attrs = {
+                attr: str(config[key]) for attr, key in _POINT_ATTRS if config.get(key)
+            }
+            if config.get("returns"):
+                attrs["returns"] = ",".join(config["returns"])
+            if "confidence" in config:
+                attrs["confidence"] = str(config["confidence"])
+            ET.SubElement(ext, _a("extensionPoint"), attrs)
             return element
         if action == "call" and "process" in config:
             element = ET.SubElement(

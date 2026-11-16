@@ -199,6 +199,55 @@ must lie inside the instance, and `budget_chf` caps the operator's
 model per tenant. One clock ticks all instances in memory; quiet ones
 sleep until the next request.
 
+## Extension points: one solution docks onto another's process
+
+A process can leave a place open for other solutions. In the BPMN file it
+is a `callActivity` without `calledElement`:
+
+```xml
+<bpmn:callActivity id="topic">
+  <bpmn:extensionElements>
+    <aimn:extensionPoint name="topic" mode="takeover" text="trigger.q"
+      last="trigger.topic" history="trigger.history" modelRole="router" returns="answer"/>
+  </bpmn:extensionElements>
+</bpmn:callActivity>
+```
+
+with the outcomes `done` (a module took over; `steps.topic.answer` holds
+what it delivered) and `none` (the process goes its own way). A solution
+that depends on the host docks a process of its own in
+`extensions/<id>.toml`:
+
+```toml
+extends  = "ask"              # the process with the point
+point    = "topic"
+process  = "booking-offer"    # runs as a child in the same chain
+
+[returns]                     # the fields the point asks for
+answer = "offer.text"
+
+[topic]
+title    = { en = "Book an appointment" }
+describe = { en = "Free slots, booking, rescheduling." }
+examples = { en = ["When is the next free slot?"] }
+keywords = { en = ["appointment", "book", "slot"] }
+```
+
+Who takes over is decided in two stages (`extensions.py`). A pre-filter
+without any model finds the topics that *come into question*: a keyword
+at the beginning of a word, or the topic that handled the previous turn of
+the conversation (`last`). It never decides. With no candidate the outcome
+is `none` and no model was asked. With candidates, one short call to the
+model role of the point decides in context and may answer "none" - so a
+keyword alone never triggers a module. A failing or unsure decision also
+ends in `none`: a module is an addition, never a reason for the host to
+fail.
+
+What docks is what is enabled: switching a solution off removes its
+extensions. Approvals do not carry over into the docked process - anything
+with an outside effect needs its own gate there. Mode `takeover` is
+implemented; `before` and `after` are reserved names.
+
 ## Develop
 
 You need [uv](https://docs.astral.sh/uv/); the Python version comes from

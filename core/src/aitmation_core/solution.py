@@ -62,6 +62,7 @@ TYPE_DIRS = frozenset(
         "configurations",
         "processes",
         "decisions",
+        "extensions",
         "cases",
         "ai",
         "tests",
