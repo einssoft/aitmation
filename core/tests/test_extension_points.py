@@ -298,6 +298,9 @@ def test_a_candidate_is_decided_by_the_model_and_the_module_takes_over(world):
     ]
     assert audit[0]["process"] == "booking-offer"
     assert "Termin" not in json.dumps(audit)  # names only, no content
+    # a conversation kept as one text reaches the decision with its recent end
+    _ask(runtime, "Termin frei?", history="x" * 2000 + " Besucher: Hallo")
+    assert model.routed[-1]["history"].endswith("Besucher: Hallo") and len(model.routed[-1]["history"]) == 1500
     runtime.close()
 
 

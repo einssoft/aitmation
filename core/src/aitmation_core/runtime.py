@@ -3130,6 +3130,8 @@ class Runtime:
         payload: dict = {"text": text}
         if isinstance(history, list) and history:
             payload["history"] = history[-6:]
+        elif isinstance(history, str) and history.strip():
+            payload["history"] = history.strip()[-1500:]  # the recent turns are at the end
         try:
             client = self._client_for(definition, router_config)
             if client is None:
