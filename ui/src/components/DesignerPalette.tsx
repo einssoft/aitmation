@@ -2,6 +2,8 @@
 // in sight - triggers, AI tasks, people, the core's actions, tools (HTTP,
 // MCP, device, read), decision tables and the flow shapes - searchable.
 // A click places the block next to the selected card and links it.
+import { IconPlus } from "@tabler/icons-react";
+import { KindIcon } from "./KindIcon";
 import { Badge, Button, Group, ScrollArea, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
 import { useMemo, useState } from "react";
 import type { DesignerCatalog, NodeKind, StepConfig } from "../api/client";
@@ -55,7 +57,7 @@ export function paletteItems(catalog: DesignerCatalog, t: (key: string, params?:
   items.push({ key: "xor", group: "flow", kind: "xor", label: t("solutions.card.kind.xor"), hint: t("solutions.designer.xorHint") });
   items.push({ key: "parallel", group: "flow", kind: "parallel", label: t("solutions.card.kind.parallel"), hint: t("solutions.designer.parallelHint") });
   items.push({ key: "timer", group: "flow", kind: "timer", label: t("solutions.card.kind.timer"), seconds: 3600, hint: t("solutions.designer.timerHint") });
-  for (const p of catalog.processes) items.push({ key: `call:${p.id}`, group: "flow", kind: "call", ref: p.id, label: `↪ ${p.title}`, hint: p.id });
+  for (const p of catalog.processes) items.push({ key: `call:${p.id}`, group: "flow", kind: "call", ref: p.id, label: p.title, hint: p.id });
   items.push({ key: "end", group: "flow", kind: "end", label: t("solutions.card.kind.end") });
   return items;
 }
@@ -92,7 +94,7 @@ export function DesignerPalette({ catalog, onPick, height }: {
                     style={{ padding: "4px 6px", borderRadius: 6, border: "1px solid var(--mantine-color-default-border)" }}
                   >
                     <Group gap={6} wrap="nowrap">
-                      <span style={{ color: KIND_STYLE[item.kind].color, width: 14, textAlign: "center" }}>{item.create ? "＋" : KIND_STYLE[item.kind].glyph}</span>
+                      {item.create ? <IconPlus size={14} stroke={2} color={KIND_STYLE[item.kind].color} aria-hidden /> : <KindIcon kind={item.kind} size={14} />}
                       <Text size="xs" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</Text>
                       {item.effect === "external" && <Badge size="xs" color="orange" variant="light">{t("solutions.designer.external")}</Badge>}
                       {item.effect === "read" && <Badge size="xs" color="blue" variant="light">{t("solutions.panel.read")}</Badge>}

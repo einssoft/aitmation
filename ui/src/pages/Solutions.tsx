@@ -4,6 +4,8 @@
 // as their TOML with a parsed view), and "Prüfen": the proving run with
 // the result coloured into the diagram. Editing writes back through the
 // API, which validates the whole solution before the runtime reloads.
+import { IconChevronLeft, IconChevronRight, IconMaximize, IconX } from "@tabler/icons-react";
+import { KindIcon } from "../components/KindIcon";
 import { Alert, Anchor, Badge, Button, Card, Code, FileButton, Group, Loader, Menu, Select, Stack, Table, Tabs, Text, Textarea, Title } from "@mantine/core";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -13,7 +15,7 @@ import { DesignerPalette, type PaletteItem } from "../components/DesignerPalette
 import { EdgeSettings, StepSettings } from "../components/StepSettings";
 import { TestRunDialog } from "../components/TestRunDialog";
 import type { CanvasApi, CanvasLabels } from "../components/FlowCanvas";
-import { KINDS, KIND_STYLE } from "../components/canvasKinds";
+import { KINDS } from "../components/canvasKinds";
 import { BriefingForm, StepPanel, stepBadges } from "../components/StepPanel";
 import { NewCaseDialog, NewElementDialog, NewSolutionDialog, StartDialog } from "../components/WorkshopDialogs";
 import { useHousehold } from "../household";
@@ -301,7 +303,7 @@ export function SolutionsPage() {
     while (nodes.some((n) => Math.abs(n.x - x) < 80 && Math.abs(n.y - y) < 60)) y += 110;
     if (item.kind === "start" && nodes.some((n) => n.kind === "start")) { x = 0; y = Math.max(...nodes.map((n) => n.y)) + 130; }
     canvas.current?.addNode({
-      id, kind: item.kind, label: item.label.replace(/^↪ /, "").slice(0, 60), x, y, w, h,
+      id, kind: item.kind, label: item.label.slice(0, 60), x, y, w, h,
       ...(item.ref ? { ref: item.ref } : {}), ...(item.source ? { source: item.source } : {}),
       ...(item.seconds ? { seconds: item.seconds } : {}), ...(item.config ? { config: item.config } : {}),
     }, anchor && anchor.kind !== "end" ? anchor.id : null);
@@ -562,7 +564,7 @@ export function SolutionsPage() {
       {!solutions.length && <Text c="dimmed">{t("solutions.none")}</Text>}
       <Group align="flex-start" wrap="nowrap">
         <Stack gap="md" w={wide ? 36 : 280} style={{ flexShrink: 0 }}>
-          <Button size="compact-xs" variant="subtle" onClick={() => setWide((w) => !w)} title={t(wide ? "solutions.showExplorer" : "solutions.hideExplorer")}>{wide ? "▶" : "◀"}</Button>
+          <Button size="compact-xs" variant="subtle" onClick={() => setWide((w) => !w)} title={t(wide ? "solutions.showExplorer" : "solutions.hideExplorer")}>{wide ? <IconChevronRight size={14} /> : <IconChevronLeft size={14} />}</Button>
           {!wide && solutions.map((s) => (
             <Card key={s.id} withBorder padding="sm">
               <Group gap={6} mb={4} justify="space-between" wrap="nowrap">
@@ -665,7 +667,7 @@ export function SolutionsPage() {
                   <Button size="xs" variant="default" loading={busy} onClick={() => void draftAction("check")}>{t("solutions.drafts.check")}</Button>
                   <Button size="xs" loading={busy} disabled={draftView.findings.length > 0} title={draftView.findings.length ? t("solutions.drafts.blocked") : t("solutions.drafts.releaseHint")} onClick={() => void draftAction("release")}>{t("solutions.drafts.release")}</Button>
                   <Button size="xs" variant="subtle" color="red" loading={busy} onClick={() => void draftAction("discard")}>{t("solutions.drafts.discard")}</Button>
-                  <Button size="xs" variant="subtle" onClick={() => setDraftView(null)}>✕</Button>
+                  <Button size="xs" variant="subtle" onClick={() => setDraftView(null)}><IconX size={14} /></Button>
                 </Group>
               </Group>
               <Text size="sm" mt="xs">{t("solutions.drafts.explain")}</Text>
@@ -737,7 +739,7 @@ export function SolutionsPage() {
                       <Menu.Target><Button size="xs" variant="light">{t("solutions.card.addMenu")}</Button></Menu.Target>
                       <Menu.Dropdown>
                         {KINDS.map((k) => (
-                          <Menu.Item key={k} leftSection={<span style={{ color: KIND_STYLE[k].color }}>{KIND_STYLE[k].glyph}</span>} onClick={() => setNewCard(k)}>{t(`solutions.card.kind.${k}`)}</Menu.Item>
+                          <Menu.Item key={k} leftSection={<KindIcon kind={k} size={16} />} onClick={() => setNewCard(k)}>{t(`solutions.card.kind.${k}`)}</Menu.Item>
                         ))}
                       </Menu.Dropdown>
                     </Menu>
@@ -761,7 +763,7 @@ export function SolutionsPage() {
                             <Menu.Target><Button size="xs" variant="light">{t("solutions.card.addMenu")}</Button></Menu.Target>
                             <Menu.Dropdown>
                               {KINDS.map((k) => (
-                                <Menu.Item key={k} leftSection={<span style={{ color: KIND_STYLE[k].color }}>{KIND_STYLE[k].glyph}</span>} onClick={() => setNewCard(k)}>{t(`solutions.card.kind.${k}`)}</Menu.Item>
+                                <Menu.Item key={k} leftSection={<KindIcon kind={k} size={16} />} onClick={() => setNewCard(k)}>{t(`solutions.card.kind.${k}`)}</Menu.Item>
                               ))}
                             </Menu.Dropdown>
                           </Menu>
@@ -805,12 +807,12 @@ export function SolutionsPage() {
                     {!fullscreen && (
                       <Group gap={6} style={{ position: "absolute", top: 8, right: 8 }}>
                         {graphDraft && editing && <Badge size="xs" color="orange">{t("solutions.card.unsaved")}</Badge>}
-                        <Button size="compact-xs" variant="default" onClick={() => setFullscreen(true)} title={t("solutions.card.fullscreen")}>⛶</Button>
+                        <Button size="compact-xs" variant="default" onClick={() => setFullscreen(true)} title={t("solutions.card.fullscreen")}><IconMaximize size={14} /></Button>
                       </Group>
                     )}
                     {fullscreen && (focus || edgeFocus) && !(editing && (focusedNode || focusedEdge)) && (
                       <Card withBorder padding="sm" shadow="md" style={{ position: "absolute", top: 12, right: 12, width: 360, maxHeight: "calc(100% - 24px)", overflow: "auto" }}>
-                        <Group justify="flex-end" mb={4}><Button size="compact-xs" variant="subtle" onClick={() => { setFocus(null); setEdgeFocus(null); }}>✕</Button></Group>
+                        <Group justify="flex-end" mb={4}><Button size="compact-xs" variant="subtle" onClick={() => { setFocus(null); setEdgeFocus(null); }}><IconX size={14} /></Button></Group>
                     {focusedStep ? (
                       <StepPanel
                         step={focusedStep}

@@ -1,6 +1,7 @@
 // Verwaltung → MCP-Server (ADR-0061): where an MCP server runs, which key
 // opens it (a tool secret, set here, never shown again) and which of its
 // tools may be called - the allowlist. Solutions only name the server.
+import { IconX } from "@tabler/icons-react";
 import { Alert, Badge, Button, Card, Checkbox, Group, NumberInput, PasswordInput, Select, Stack, Table, Text, TextInput, Title } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import type { McpServerView, McpToolInfo, SolutionRow } from "../api/client";
@@ -157,7 +158,7 @@ export function McpPage() {
             </Group>
             <Group>
               <Button loading={busy === "save"} disabled={!draft.name || !draft.url} onClick={() => void save()}>{t("settings.mcp.save")}</Button>
-              <Button variant="subtle" onClick={() => setDraft(null)}>×</Button>
+              <Button variant="subtle" onClick={() => setDraft(null)}><IconX size={16} /></Button>
             </Group>
           </Stack>
         </Card>

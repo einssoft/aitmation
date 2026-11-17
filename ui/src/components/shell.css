@@ -28,3 +28,15 @@
 [data-mantine-color-scheme="dark"] .nav-item[data-active] {
   background: var(--mantine-color-dark-6);
 }
+/* The router marks a group whose child is open as current; only the entry
+   that is the page itself is drawn as active. */
+.nav-item[aria-current]:not([data-active]) {
+  background: transparent;
+  color: var(--mantine-color-text);
+}
+.nav-item[aria-current]:not([data-active]):hover {
+  background: var(--mantine-color-gray-2);
+}
+[data-mantine-color-scheme="dark"] .nav-item[aria-current]:not([data-active]):hover {
+  background: var(--mantine-color-dark-6);
+}

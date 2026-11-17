@@ -8,6 +8,7 @@
 // An agent here is a declared step, not a free actor: it uses reading
 // tools itself; a tool with an outside effect runs only in a process
 // behind an approval. The page says so where tools are chosen.
+import { IconApi, IconBraces, IconDeviceDesktop, IconFileText, IconPlugConnected, IconSearch, IconX, type Icon } from "@tabler/icons-react";
 import { ActionIcon, Alert, Anchor, Badge, Button, Card, Checkbox, Code, Group, MultiSelect, NumberInput, Select, SimpleGrid, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -62,6 +63,20 @@ function Effect({ effect }: { effect: string }) {
 const designer = (solution: string, process: string) => `/workshop/solutions?solution=${encodeURIComponent(solution)}&kind=process&id=${encodeURIComponent(process)}`;
 
 // -- processes -------------------------------------------------------------------
+
+const TOOL_ICON: Record<string, Icon> = {
+  page: IconFileText,
+  search: IconSearch,
+  json: IconBraces,
+  api: IconApi,
+  mcp: IconPlugConnected,
+  client: IconDeviceDesktop,
+};
+
+function ToolIcon({ kind }: { kind: string }) {
+  const Symbol = TOOL_ICON[kind] ?? IconApi;
+  return <Symbol size={20} stroke={1.5} aria-hidden />;
+}
 
 export function ProcessesPage() {
   const { t, pick } = useI18n();
@@ -311,7 +326,7 @@ function AgentForm({ agent, view, onBack, onSaved, onCopy }: { agent: LibraryAge
                 <Group key={i} wrap="nowrap" align="flex-end">
                   <TextInput w={180} label={i === 0 ? t("library.field") : undefined} value={k} onChange={(e) => setOutput(output.map((row, j) => (j === i ? [e.currentTarget.value, row[1]] : row)))} readOnly={readOnly} />
                   <TextInput style={{ flex: 1 }} label={i === 0 ? t("library.fieldMeaning") : undefined} value={v} onChange={(e) => setOutput(output.map((row, j) => (j === i ? [row[0], e.currentTarget.value] : row)))} readOnly={readOnly} />
-                  {!readOnly && <ActionIcon variant="subtle" color="gray" aria-label={t("library.remove")} onClick={() => setOutput(output.filter((_, j) => j !== i))}>✕</ActionIcon>}
+                  {!readOnly && <ActionIcon variant="subtle" color="gray" aria-label={t("library.remove")} onClick={() => setOutput(output.filter((_, j) => j !== i))}><IconX size={14} /></ActionIcon>}
                 </Group>
               ))}
               {!readOnly && <Button variant="light" w="fit-content" onClick={() => setOutput([...output, ["", ""]])}>{t("library.addField")}</Button>}
@@ -558,7 +573,7 @@ export function ToolsPage() {
           <Card key={kind} withBorder>
             <Stack gap="xs">
               <Group justify="space-between" wrap="nowrap">
-                <Text fw={600}>{t(`library.kind.${kind}.title`)}</Text>
+                <Group gap="xs" wrap="nowrap"><ToolIcon kind={kind} /><Text fw={600}>{t(`library.kind.${kind}.title`)}</Text></Group>
                 {view?.form_kinds.includes(kind) ? (
                   <Button size="xs" variant="light" onClick={() => setDraft(newDraft(kind))}>{t("library.new")}</Button>
                 ) : kind === "mcp" ? (

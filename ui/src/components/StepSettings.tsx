@@ -3,12 +3,13 @@
 // BPMN file), ``loop``, ``deadline`` - and, for the start, the start form
 // (the process contract). Values can be typed as text or taken from the
 // data the step can see: the start form, the steps before it, constants.
+import { IconX } from "@tabler/icons-react";
+import { KindIcon } from "./KindIcon";
 import { ActionIcon, Badge, Button, Divider, Group, Menu, NumberInput, ScrollArea, Select, Stack, Switch, TagsInput, Text, TextInput, Textarea, Tooltip } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import type { ConfigValue, ContractInput, DesignerCatalog, GraphEdge, GraphNode, ProcessGraph, SettingSpec, SolutionRow, StepConfig, TemplateRow } from "../api/client";
 import { useI18n } from "../i18n";
 import { bindingOptions } from "./CardEditor";
-import { KIND_STYLE } from "./canvasKinds";
 
 export interface DataPath {
   path: string;
@@ -239,7 +240,7 @@ export function StepSettings({ node, graph, contract, catalog, solution, templat
     <Stack gap="xs">
       <Group gap={6} justify="space-between" wrap="nowrap">
         <Group gap={6} wrap="nowrap">
-          <span style={{ color: KIND_STYLE[node.kind].color, fontSize: 16 }}>{KIND_STYLE[node.kind].glyph}</span>
+          <KindIcon kind={node.kind} size={18} />
           <Text fw={700} size="sm">{t(`solutions.card.kind.${node.kind}`)}</Text>
           <Text size="xs" c="dimmed">{node.id}</Text>
         </Group>
@@ -271,7 +272,7 @@ export function StepSettings({ node, graph, contract, catalog, solution, templat
               <TextInput size="xs" w={110} label={i === 0 ? t("solutions.designer.field") : undefined} value={c.name} error={c.name && !/^[a-z][a-z0-9_]*$/.test(c.name) ? " " : undefined} onChange={(e) => setInputs(inputs.map((x, j) => (j === i ? { ...x, name: e.currentTarget.value } : x)))} />
               <TextInput size="xs" style={{ flex: 1 }} label={i === 0 ? t("solutions.designer.fieldDescription") : undefined} value={c.description} onChange={(e) => setInputs(inputs.map((x, j) => (j === i ? { ...x, description: e.currentTarget.value } : x)))} />
               <TextInput size="xs" w={80} label={i === 0 ? t("solutions.designer.fieldDefault") : undefined} value={c.default ?? ""} placeholder={t("solutions.designer.required")} onChange={(e) => setInputs(inputs.map((x, j) => (j === i ? { ...x, default: e.currentTarget.value === "" ? undefined : e.currentTarget.value } : x)))} />
-              <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setInputs(inputs.filter((_, j) => j !== i))}>✕</ActionIcon>
+              <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setInputs(inputs.filter((_, j) => j !== i))}><IconX size={14} /></ActionIcon>
             </Group>
           ))}
           <Button size="compact-xs" variant="light" onClick={() => setInputs([...inputs, { name: `field${inputs.length + 1}`, description: "" }])}>{t("solutions.designer.addField")}</Button>
@@ -414,7 +415,7 @@ export function EdgeSettings({ edge, graph, catalog, contract, onApply, onDelete
                   <Group gap={4} wrap="nowrap" align="flex-end">
                     <Select size="xs" w={130} data={OPS.map((o) => ({ value: o, label: t(`solutions.designer.op.${o}`) }))} value={r.op} onChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, op: (v as Op) ?? "eq" } : x)))} />
                     <TextInput size="xs" style={{ flex: 1 }} placeholder={r.op === "in" ? "a, b" : r.op === "raw" ? '"ok", > 0' : ""} value={r.value} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, value: e.currentTarget.value } : x)))} />
-                    <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setRows(rows.filter((_, j) => j !== i))}>✕</ActionIcon>
+                    <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setRows(rows.filter((_, j) => j !== i))}><IconX size={14} /></ActionIcon>
                   </Group>
                 </Stack>
               ))}

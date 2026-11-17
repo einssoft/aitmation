@@ -2,11 +2,12 @@
 // to (briefing, decision, action, process, chain target, trigger source,
 // timer) and what an edge is called. Step *properties* stay in StepPanel;
 // this is the structural part - label, binding, outcome name.
+import { KindIcon } from "./KindIcon";
 import { Button, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
 import type { GraphNode, NodeKind, SolutionRow, TemplateRow } from "../api/client";
 import { useI18n } from "../i18n";
-import { KINDS, KIND_STYLE } from "./canvasKinds";
+import { KINDS } from "./canvasKinds";
 
 const ID = /^[a-z][a-z0-9_]*$/;
 const INTERNAL_ACTIONS = ["export", "archive", "dispatch", "forward", "join", "record", "knowledge", "rows"];
@@ -67,7 +68,7 @@ export function NewCardDialog({ kind, solution, templates, taken, onClose, onCre
   const needsRef = ["ai", "decision", "action", "call"].includes(kind);
   const valid = ID.test(id) && !taken.includes(id) && (!needsRef || !!ref);
   return (
-    <Modal opened onClose={onClose} title={<Group gap={6}><span style={{ color: KIND_STYLE[kind].color }}>{KIND_STYLE[kind].glyph}</span><span>{t("solutions.card.add", { kind: t(`solutions.card.kind.${kind}`) })}</span></Group>}>
+    <Modal opened onClose={onClose} title={<Group gap={6}><KindIcon kind={kind} size={18} /><span>{t("solutions.card.add", { kind: t(`solutions.card.kind.${kind}`) })}</span></Group>}>
       <Stack>
         <Text size="xs" c="dimmed">{t(`solutions.card.hint.${kind}`)}</Text>
         <TextInput label={t("solutions.card.id")} description={t("solutions.card.idHelp")} value={id} required error={id && (!ID.test(id) || taken.includes(id)) ? t("solutions.card.idInvalid") : undefined} onChange={(e) => setId(e.currentTarget.value)} />
@@ -102,7 +103,7 @@ export function CardEditor({ node, solution, templates, onApply, onDelete }: {
   return (
     <Stack gap="xs">
       <Group gap={6}>
-        <span style={{ color: KIND_STYLE[node.kind].color, fontSize: 16 }}>{KIND_STYLE[node.kind].glyph}</span>
+        <KindIcon kind={node.kind} size={18} />
         <Text fw={700} size="sm">{t(`solutions.card.kind.${node.kind}`)}</Text>
         <Text size="xs" c="dimmed">{node.id}</Text>
       </Group>

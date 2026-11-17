@@ -1,6 +1,7 @@
 // Einstellungen: Protokoll (model calls,
 // diagnostics), System (instance facts, household), Regeln (mandates and
 // suggestions), and placeholders for what comes later.
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
 import { Alert, Badge, Button, Card, Code, Group, Stack, Table, Tabs, Text, Title } from "@mantine/core";
 import { Fragment, useEffect, useState } from "react";
 import { type DiagRow, type LlmDetail, type LlmRow, type MandateRow, type Member, type Suggestion } from "../api/client";
@@ -116,7 +117,7 @@ export function LogPage() {
                           <Badge color={r.status === "ok" ? "green" : "red"} variant="light">{r.status}</Badge>
                           {r.error ? <Text size="xs" c="red" style={{ maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.error}</Text> : null}
                         </Table.Td>
-                        <Table.Td><Text size="xs" c="dimmed">{open === key ? "▲" : "▼"}</Text></Table.Td>
+                        <Table.Td><Text size="xs" c="dimmed">{open === key ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}</Text></Table.Td>
                       </Table.Tr>
                       {open === key && <LlmDetailRow row={r} colSpan={9} />}
                     </Fragment>

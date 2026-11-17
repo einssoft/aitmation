@@ -4,6 +4,7 @@
 // keeps everything the canvas does not edit. Cards show the declared
 // facts (chips) and the proving run or live statistics (ring + count).
 // Loaded lazily with the workshop, like the BPMN viewer.
+import { KindIcon } from "./KindIcon";
 import {
   Background,
   BaseEdge,
@@ -98,7 +99,7 @@ const COLORS: Record<NodeBadge["color"], string> = {
 };
 
 function Diamond({ data, selected }: { data: CardData; selected: boolean }) {
-  // BPMN: exclusive gateway = diamond with ✕, parallel = diamond with +.
+  // BPMN: exclusive gateway = diamond with a cross, parallel = diamond with a plus.
   const style = KIND_STYLE[data.kind];
   const ring = data.failed ? "#e03131" : data.visited ? "#0ca678" : undefined;
   const border = selected || data.chosen ? style.color : ring ?? style.color;
@@ -110,7 +111,7 @@ function Diamond({ data, selected }: { data: CardData; selected: boolean }) {
         <Handle type="source" position={Position.Right} style={{ background: style.color, width: 9, height: 9, right: -6 }} />
         <RowHandles />
         <div style={{ position: "absolute", inset: 6, transform: "rotate(45deg)", border: `2.5px solid ${border}`, background: `${style.color}14`, borderRadius: 4, boxShadow: selected || data.chosen ? `0 0 0 3px ${style.color}33` : undefined }} />
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: style.color, fontWeight: 700, fontSize: data.kind === "parallel" ? 22 : 15 }}>{style.glyph}</div>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: style.color, lineHeight: 0 }}><KindIcon kind={data.kind} size={18} stroke={2.25} /></div>
       </div>
       {data.visited ? (
         <span style={{ position: "absolute", top: 12, right: 18, background: ring, color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{data.visited}</span>
@@ -146,9 +147,8 @@ export function edgeSides(a: { x: number; y: number; w: number; h: number }, b: 
 }
 
 // An entry's symbol (ADR-0057): how the process is triggered.
-const ENTRY_GLYPH: Record<string, string> = { chat: "💬", messenger: "📱", schedule: "⏰", folder: "📁", mailbox: "✉", chain: "⛓", manual: "▶" };
-function entryGlyph(data: CardData): string {
-  return ENTRY_GLYPH[String(data.channel || "")] ?? ENTRY_GLYPH[String(data.source || "")] ?? KIND_STYLE.start.glyph;
+function entryOf(data: CardData): string {
+  return String(data.channel || data.source || "");
 }
 
 function Card({ id, data, selected }: NodeProps<CardNode>) {
@@ -177,7 +177,7 @@ function Card({ id, data, selected }: NodeProps<CardNode>) {
         <span style={{ position: "absolute", top: -9, right: -9, background: ring, color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>{data.visited}</span>
       ) : null}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: compact ? "6px 10px" : "8px 10px 4px" }}>
-        <span style={{ width: 24, height: 24, borderRadius: 7, background: style.color, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{data.kind === "start" ? entryGlyph(data) : style.glyph}</span>
+        <span style={{ width: 24, height: 24, borderRadius: 7, background: style.color, color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><KindIcon kind={data.kind} entry={entryOf(data)} size={15} tinted={false} /></span>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: 0.4, color: "var(--mantine-color-dimmed)" }}>{data.labels.kind[data.kind]}{data.kind === "start" && (data.channel || data.source) ? ` · ${String(data.channel || data.source)}` : ""}</div>
           <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: data.label ? "inherit" : "var(--mantine-color-dimmed)" }}>{data.label || (data.ref ? `→ ${data.ref}` : id)}</div>
