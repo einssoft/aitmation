@@ -14,6 +14,7 @@
   "dependencies": {
     "@mantine/core": "^9.6.0",
     "@mantine/hooks": "^9.6.0",
+    "@tabler/icons-react": "^3.52.0",
     "@xyflow/react": "^12.12.0",
     "dmn-js": "^17.12.3",
     "react": "^19.2.0",

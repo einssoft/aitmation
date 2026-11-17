@@ -1,0 +1,30 @@
+/* Sidebar: a quiet grey surface; the current entry is a white card. */
+.nav-bar {
+  background: var(--mantine-color-gray-1);
+  border-right: 0;
+}
+[data-mantine-color-scheme="dark"] .nav-bar {
+  background: var(--mantine-color-dark-8);
+}
+.nav-item {
+  border-radius: var(--mantine-radius-md);
+  color: var(--mantine-color-text);
+  margin-bottom: 2px;
+}
+.nav-item:hover {
+  background: var(--mantine-color-gray-2);
+}
+.nav-item[data-active] {
+  background: var(--mantine-color-body);
+  box-shadow: inset 3px 0 0 var(--mantine-primary-color-filled);
+  font-weight: 600;
+}
+.nav-item[data-active] .mantine-NavLink-label {
+  font-weight: 600;
+}
+[data-mantine-color-scheme="dark"] .nav-item:hover {
+  background: var(--mantine-color-dark-6);
+}
+[data-mantine-color-scheme="dark"] .nav-item[data-active] {
+  background: var(--mantine-color-dark-6);
+}

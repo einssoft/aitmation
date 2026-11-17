@@ -1,9 +1,9 @@
 // Landing page of a navigation group (ADR-0029): one card per member with
 // a short description, so a folded group is still discoverable.
-import { Card, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { Link } from "react-router-dom";
 import { useI18n } from "../i18n";
-import { type NavGroup } from "../nav";
+import { ICON, type NavGroup } from "../nav";
 
 export function GroupOverview({ group }: { group: NavGroup }) {
   const { t } = useI18n();
@@ -16,7 +16,10 @@ export function GroupOverview({ group }: { group: NavGroup }) {
           .filter((c) => c.to !== group.base)
           .map((c) => (
             <Card key={c.to} withBorder component={Link} to={c.to} style={{ textDecoration: "none" }}>
-              <Title order={5}>{t(`nav.${c.key}`)}</Title>
+              <Group gap="xs" wrap="nowrap">
+                <c.icon {...ICON} aria-hidden />
+                <Title order={5}>{t(`nav.${c.key}`)}</Title>
+              </Group>
               <Text size="sm" c="dimmed" mt={4}>{t(`overview.${c.key}`)}</Text>
             </Card>
           ))}

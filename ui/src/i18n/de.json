@@ -603,7 +603,8 @@
     "setup": "Einrichtungs-Assistent: Mandanten, Profile, Verbindungen.",
     "operations": "Was gelaufen ist, was gerade läuft und worauf es wartet, was als Nächstes dran ist, Fehler und Token-Verbrauch — auf einer Seite.",
     "processes": "Alle Abläufe der Instanz: wie sie starten, woraus sie bestehen, wo ein Mensch entscheidet.",
-    "projects": "Was Sie selbst gebaut haben: je Projekt die Abläufe, die zusammengehören, mit ihren Agenten und Werkzeugen."
+    "projects": "Was Sie selbst gebaut haben: je Projekt die Abläufe, die zusammengehören, mit ihren Agenten und Werkzeugen.",
+    "mcp": "Externe Werkzeug-Server anbinden: Adresse, Zugang, erlaubte Werkzeuge."
   },
   "metrics": {
     "title": "Kennzahlen",

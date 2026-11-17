@@ -603,7 +603,8 @@
     "setup": "Assistant de configuration : mandants, profils, connexions.",
     "operations": "Ce qui a tourné, ce qui tourne et sur quoi ça attend, ce qui vient, les erreurs et la consommation de jetons — sur une page.",
     "processes": "Tous les processus de l'instance : comment ils démarrent, de quoi ils sont faits, où une personne décide.",
-    "projects": "Ce que vous avez construit vous-même : par projet, les processus qui vont ensemble, avec leurs agents et outils."
+    "projects": "Ce que vous avez construit vous-même : par projet, les processus qui vont ensemble, avec leurs agents et outils.",
+    "mcp": "Relier des serveurs d'outils externes : adresse, accès, outils autorisés."
   },
   "metrics": {
     "title": "Indicateurs",

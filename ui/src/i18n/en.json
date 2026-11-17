@@ -603,7 +603,8 @@
     "setup": "Setup assistant: clients, profiles, connections.",
     "operations": "What ran, what is running and what it waits on, what comes next, errors and token usage — on one page.",
     "processes": "Every process of the instance: how it starts, what it is built from, where a person decides.",
-    "projects": "What you built yourself: per project the processes that belong together, with their agents and tools."
+    "projects": "What you built yourself: per project the processes that belong together, with their agents and tools.",
+    "mcp": "Connect external tool servers: address, access, allowed tools."
   },
   "metrics": {
     "title": "Key figures",

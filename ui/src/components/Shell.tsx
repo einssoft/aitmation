@@ -24,7 +24,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { NavLink as RouterLink, useLocation } from "react-router-dom";
 import { LANGUAGES, LANGUAGE_NAMES, useI18n, type Language } from "../i18n";
 import { useHousehold } from "../household";
-import { GROUPS, WORK, childActive, isActive, type NavGroup } from "../nav";
+import { GROUPS, ICON, WORK, childActive, isActive, type NavEntry, type NavGroup } from "../nav";
+import "./shell.css";
 import { LoginPage } from "../pages/Login";
 
 const ADVANCED_KEY = "aitmation.advanced";
@@ -90,13 +91,15 @@ export function Shell({ children }: { children: ReactNode }) {
         {openGates}
       </Badge>
     ) : undefined;
-  const item = (to: string, label: string, active: boolean, nested = false) => (
+  const item = (e: NavEntry, active: boolean, nested = false) => (
     <NavLink
-      key={to}
+      key={e.to}
+      className="nav-item"
       component={RouterLink}
-      to={to}
-      label={label}
-      rightSection={badgeOf(to)}
+      to={e.to}
+      label={t(`nav.${e.key}`)}
+      leftSection={<e.icon {...ICON} aria-hidden />}
+      rightSection={badgeOf(e.to)}
       active={active}
       pl={nested ? 28 : undefined}
     />
@@ -107,6 +110,8 @@ export function Shell({ children }: { children: ReactNode }) {
     return (
       <NavLink
         key={g.base}
+        className="nav-item"
+        leftSection={<g.icon {...ICON} aria-hidden />}
         component={RouterLink}
         to={g.base}
         label={t(`nav.${g.key}`)}
@@ -115,7 +120,7 @@ export function Shell({ children }: { children: ReactNode }) {
         onChange={(o) => setManual((m) => ({ ...m, [g.base]: o }))}
         childrenOffset={0}
       >
-        {g.children.map((c) => item(c.to, t(`nav.${c.key}`), childActive(location.pathname, g, c), true))}
+        {g.children.map((c) => item(c, childActive(location.pathname, g, c), true))}
       </NavLink>
     );
   };
@@ -203,11 +208,11 @@ export function Shell({ children }: { children: ReactNode }) {
           </Group>
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar p="xs">
+      <AppShell.Navbar p="xs" className="nav-bar">
         <ScrollArea h="100%" type="auto" offsetScrollbars>
           {section(
             t("nav.work"),
-            WORK.map((e) => item(e.to, t(`nav.${e.key}`), isActive(location.pathname, e.to))),
+            WORK.map((e) => item(e, isActive(location.pathname, e.to))),
           )}
           {section(
             t("nav.more"),

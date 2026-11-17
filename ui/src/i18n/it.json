@@ -603,7 +603,8 @@
     "setup": "Assistente di configurazione: mandanti, profili, connessioni.",
     "operations": "Cosa è girato, cosa gira e su cosa attende, cosa viene, errori e consumo di token — su una pagina.",
     "processes": "Tutti i processi dell'istanza: come partono, di cosa sono fatti, dove decide una persona.",
-    "projects": "Ciò che ha costruito lei: per progetto i processi che vanno insieme, con i loro agenti e strumenti."
+    "projects": "Ciò che ha costruito lei: per progetto i processi che vanno insieme, con i loro agenti e strumenti.",
+    "mcp": "Collegare server di strumenti esterni: indirizzo, accesso, strumenti consentiti."
   },
   "metrics": {
     "title": "Indicatori",
