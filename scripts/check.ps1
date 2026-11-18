@@ -78,6 +78,7 @@ try {
             Push-Location ui
             try {
                 Step "ui: npm ci"    { npm ci --no-audit --no-fund }
+                Step "ui: audit"     { npm audit --audit-level=high }
                 Step "ui: build (i18n gate + tsc + vite)" { npm run build }
             } finally { Pop-Location }
         }

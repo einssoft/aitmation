@@ -50,6 +50,8 @@ jobs:
           cache: npm
           cache-dependency-path: ui/package-lock.json
       - run: npm ci --no-audit --no-fund
+      # known high/critical advisories in the UI's packages fail the run
+      - run: npm audit --audit-level=high
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:

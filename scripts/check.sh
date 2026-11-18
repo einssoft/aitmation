@@ -58,7 +58,7 @@ if [ "$SKIP_TESTS" = 0 ]; then
   )
   if [ "$SKIP_UI" = 0 ]; then
     need npm "install Node.js 22+"
-    ( cd ui; step "ui: npm ci"; npm ci --no-audit --no-fund; step "ui: build"; npm run build )
+    ( cd ui; step "ui: npm ci"; npm ci --no-audit --no-fund; step "ui: audit"; npm audit --audit-level=high; step "ui: build"; npm run build )
   fi
   if [ "$SKIP_LAUNCHER" = 0 ]; then
     if command -v go >/dev/null 2>&1; then
