@@ -22,7 +22,9 @@ FROM python:3.12-slim-bookworm AS app
 
 # OCR for scans and photos (ADR-0028) and ffmpeg for recordings (ADR-0030)
 # are system tools next to the core; wget serves the health check.
+# The upgrade picks up fixes Debian has published since the base image was built.
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends \
       tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita tesseract-ocr-eng \
       ffmpeg wget ca-certificates \
@@ -33,7 +35,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /usr/local/bin/uv
 ENV UV_PROJECT_ENVIRONMENT=/app/venv \
     UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
-    UV_PYTHON_DOWNLOADS=never
+    UV_PYTHON_DOWNLOADS=never \
+    UV_NO_CACHE=1
 
 WORKDIR /app/core
 # Dependencies first (cached between source changes), the sources after.
