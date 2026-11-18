@@ -54,6 +54,7 @@ try {
             Step "core: uv sync"        { uv sync --extra mcp }
             Step "core: ruff check"     { uv run ruff check . }
             Step "core: license boundary ee/" { uv run python ..\scripts\check_ee_boundary.py }
+            Step "core: licences" { uv run python ..\scripts\check_licenses.py }
             Step "core: pytest"         { uv run pytest -q }
             Step "core: validate bundles (format 1)" {
                 $bundles = Get-ChildItem ..\apps -Directory | Where-Object { Test-Path (Join-Path $_.FullName "app.toml") } | ForEach-Object { $_.FullName }

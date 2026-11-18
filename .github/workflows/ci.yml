@@ -26,6 +26,8 @@ jobs:
       - run: uv run ruff check .
       - name: license boundary (nothing open imports ee/)
         run: uv run python ../scripts/check_ee_boundary.py
+      - name: licences (no copyleft in the dependency tree)
+        run: uv run python ../scripts/check_licenses.py
       - run: uv run pytest -q
       - name: validate app bundles
         run: uv run python -m aitmation_core validate-app ../apps/*/

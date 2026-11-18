@@ -70,9 +70,16 @@ src = ["src", "tests"]
 # Strict but pragmatic: correctness, bug-prone patterns, imports, naming,
 # modernization. Docstring style is not enforced by the linter; docstrings
 # and comments are written in English.
-select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF", "S"]
+# Security rules (S) with two standing exceptions, reviewed 2026-11-18:
+# S101 - asserts narrow types, they guard nothing at run time.
+# S608 - statements are assembled from constant fragments and "?" marks
+#        only; every value is bound. Keep it that way: never put a value
+#        into the statement text.
+ignore = ["S101", "S608"]
 
 [tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]  # fixtures use literal tokens, temp paths and local servers
 # Test fixtures hold literal XML/DMN: readable markup beats wrapped lines.
 "tests/test_bpmn.py" = ["E501"]
 "tests/test_dmn.py" = ["E501"]

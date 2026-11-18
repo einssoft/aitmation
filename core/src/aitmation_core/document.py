@@ -163,7 +163,9 @@ class TesseractOcr:
 
     @staticmethod
     def _default_run(args: list[str], stdin: bytes | None) -> subprocess.CompletedProcess:
-        return subprocess.run(args, input=stdin, capture_output=True, timeout=300, check=False)
+        return subprocess.run(  # noqa: S603 - argument list built here, no shell
+            args, input=stdin, capture_output=True, timeout=300, check=False
+        )
 
     def available(self) -> bool:
         return shutil.which(self.binary) is not None or Path(self.binary).is_file()

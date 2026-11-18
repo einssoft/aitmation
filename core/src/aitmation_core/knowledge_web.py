@@ -44,6 +44,7 @@ from urllib.parse import unquote, urlsplit
 from urllib.robotparser import RobotFileParser
 from xml.etree import ElementTree
 
+from . import xmlsafe
 from .connectors import WebReader, host_policy
 from .formats import html_page, normalize_url
 
@@ -312,7 +313,7 @@ class Crawler:
             if status != 200 or not body:
                 continue
             try:
-                root = ElementTree.fromstring(body)
+                root = xmlsafe.fromstring(body)
             except ElementTree.ParseError:
                 continue
             tag = root.tag.rsplit("}", 1)[-1]

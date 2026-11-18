@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 
 COOKIE_NAME = "aitmation_session"
 EVERYTHING = "*"
-TOKEN_PREFIX = "v1"
+TOKEN_PREFIX = "v1"  # noqa: S105 - a format version, not a secret
 
 
 class AuthError(Exception):

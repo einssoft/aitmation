@@ -29,7 +29,7 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import __version__, aimn, schedule, solution, trust
+from . import __version__, aimn, schedule, solution, trust, xmlsafe
 from . import extensions as extension_points
 from .bpmn import BpmnError, parse_bpmn
 from .data_classes import DataClassError, demand, rank
@@ -1029,7 +1029,7 @@ def _validate_v2(
         try:
             import xml.etree.ElementTree as ET
 
-            ET.fromstring(text)
+            xmlsafe.fromstring(text)
         except ET.ParseError as exc:
             error(where, f"invalid XML: {exc}")
             continue

@@ -43,6 +43,7 @@ if [ "$SKIP_TESTS" = 0 ]; then
     step "core: uv sync";        uv sync --extra mcp
     step "core: ruff check";     uv run ruff check .
     step "core: license boundary ee/"; uv run python ../scripts/check_ee_boundary.py
+    step "core: licences";       uv run python ../scripts/check_licenses.py
     step "core: pytest";         uv run pytest -q
     step "core: validate bundles (format 1)"
     bundles=$(find ../apps -mindepth 2 -maxdepth 2 -name app.toml -exec dirname {} \;)

@@ -41,7 +41,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import aimn
+from . import aimn, xmlsafe
 from .definition import (
     END,
     PROCESS_PREFIX,
@@ -240,7 +240,7 @@ def parse_bpmn(
     if "<!DOCTYPE" in text or "<!ENTITY" in text:
         raise BpmnError(f"{source}: DOCTYPE/ENTITY declarations are not allowed")
     try:
-        root = ET.fromstring(text)
+        root = xmlsafe.fromstring(text)
     except ET.ParseError as exc:
         raise BpmnError(f"{source}: invalid XML: {exc}") from exc
     if root.tag != _b("definitions"):
@@ -1457,7 +1457,7 @@ def ensure_diagram(text: str) -> str:
     if "<!DOCTYPE" in text or "<!ENTITY" in text:
         return text  # never expand entities, even for display
     try:
-        root = ET.fromstring(text)
+        root = xmlsafe.fromstring(text)
     except ET.ParseError:
         return text
     process = root.find(_b("process"))

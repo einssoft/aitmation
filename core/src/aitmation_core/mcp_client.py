@@ -164,7 +164,8 @@ class _StdioSession:
         env = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "LANG", "TMPDIR")}
         env.update({k: _fill(v, secrets) for k, v in server.env.items()})
         try:
-            self.proc = subprocess.Popen(
+            # The command is the operator's server configuration, allowed only with mcp_allow_stdio.
+            self.proc = subprocess.Popen(  # noqa: S603
                 server.command,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,

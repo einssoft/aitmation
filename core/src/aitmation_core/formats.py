@@ -25,6 +25,8 @@ from typing import ClassVar
 from urllib.parse import urljoin, urlsplit, urlunsplit
 from xml.etree import ElementTree
 
+from . import xmlsafe
+
 MAX_UNPACKED_BYTES = 50 * 1024 * 1024
 """Upper bound for all text-carrying members of one office file together."""
 
@@ -251,7 +253,7 @@ class _Reader:
         if len(data) > info.file_size:
             raise FormatError("office file member is larger than declared")
         try:
-            return ElementTree.fromstring(data)
+            return xmlsafe.fromstring(data)
         except ElementTree.ParseError as exc:
             raise FormatError(f"{name}: not well-formed XML") from exc
 

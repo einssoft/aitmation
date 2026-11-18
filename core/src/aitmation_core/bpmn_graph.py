@@ -18,6 +18,7 @@ import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 
+from . import xmlsafe
 from .bpmn import (
     BPMN_NS,
     BPMNDI_NS,
@@ -223,7 +224,7 @@ def _parse(text: str) -> tuple[ET.Element, ET.Element]:
     if "<!DOCTYPE" in text or "<!ENTITY" in text:
         raise GraphError("DOCTYPE and entities are not allowed")
     try:
-        root = ET.fromstring(text)
+        root = xmlsafe.fromstring(text)
     except ET.ParseError as exc:
         raise GraphError(f"not well-formed: {exc}") from exc
     process = root.find(_b("process"))

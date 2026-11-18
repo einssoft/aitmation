@@ -73,7 +73,8 @@ Runner = Callable[[list[str], float | None], subprocess.CompletedProcess]
 
 
 def _default_run(args: list[str], timeout: float | None) -> subprocess.CompletedProcess:
-    return subprocess.run(args, capture_output=True, timeout=timeout, check=False)
+    # The argument list is built here; no shell is involved.
+    return subprocess.run(args, capture_output=True, timeout=timeout, check=False)  # noqa: S603
 
 
 class TranscriptionError(RuntimeError):

@@ -24,6 +24,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any
 
+from . import xmlsafe
+
 HIT_POLICIES = ("UNIQUE", "FIRST", "COLLECT")
 _IGNORED_TOP = ("inputData", "knowledgeSource", "extensionElements", "description", "DMNDI")
 _DMN_NS_PREFIXES = ("http://www.omg.org/spec/DMN/", "https://www.omg.org/spec/DMN/")
@@ -90,7 +92,7 @@ def parse_dmn_all(text: str, source: str = "<string>") -> dict[str, Decision]:
     if "<!DOCTYPE" in text or "<!ENTITY" in text:
         raise DmnError(f"{source}: DOCTYPE/ENTITY declarations are not allowed")
     try:
-        root = ET.fromstring(text)
+        root = xmlsafe.fromstring(text)
     except ET.ParseError as exc:
         raise DmnError(f"{source}: invalid XML: {exc}") from exc
     if not _is_dmn(root.tag) or _local(root.tag) != "definitions":
