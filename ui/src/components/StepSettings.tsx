@@ -296,12 +296,13 @@ export function StepSettings({ node, graph, contract, catalog, solution, templat
           <SettingField key={k} name={k} spec={spec} value={config[k]} catalog={catalog} onChange={(v) => setConfig(setKey(config, k, v))} />
         ))
       )}
-      {node.kind === "action" && Object.keys(inputSpecs).length > 0 && (
+      {node.kind === "action" && (Object.keys(inputSpecs).length > 0 || action?.inputs_from === "free") && (
         <>
           <Divider label={t("solutions.designer.inputs")} labelPosition="left" />
           {Object.entries(inputSpecs).map(([name, spec]) => (
             <ValueField key={name} label={settingLabel(name, spec.label)} required={spec.required} multiline={spec.multiline} value={bound[name] ?? ""} paths={paths} onChange={(v) => setInput(name, v)} />
           ))}
+          {action?.inputs_from === "free" && <FreeField taken={Object.keys(inputSpecs)} onAdd={(name) => setInput(name, "literal:")} />}
         </>
       )}
 
@@ -429,5 +430,21 @@ export function EdgeSettings({ edge, graph, catalog, contract, onApply, onDelete
         <Button size="xs" variant="subtle" color="red" onClick={onDelete}>{t("solutions.card.deleteEdge")}</Button>
       </Group>
     </Stack>
+  );
+}
+
+/** A value of its own name (action ``set``): the name becomes a field of
+ *  the step's result. Lower case letters, digits and ``_``. */
+function FreeField({ taken, onAdd }: { taken: string[]; onAdd: (name: string) => void }) {
+  const { t } = useI18n();
+  const [name, setName] = useState("");
+  const valid = /^[a-z][a-z0-9_]*$/.test(name) && !taken.includes(name);
+  return (
+    <Group gap={4} align="flex-end" wrap="nowrap">
+      <TextInput style={{ flex: 1 }} size="xs" label={t("solutions.designer.newValue")} placeholder="answer" value={name}
+        error={name && !valid ? t("solutions.designer.valueName") : undefined}
+        onChange={(e) => setName(e.currentTarget.value.trim())} />
+      <Button size="compact-xs" variant="light" disabled={!valid} onClick={() => { onAdd(name); setName(""); }}>{t("solutions.designer.add")}</Button>
+    </Group>
   );
 }

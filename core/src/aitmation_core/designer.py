@@ -96,6 +96,16 @@ ACTION_SCHEMAS: dict[str, dict] = {
         },
         "outputs": {"filed": "paths in the filing folder (list)", "folder": "folder used"},
     },
+    "set": {
+        "group": "data",
+        "effect": "internal",
+        "config": {},
+        # any field names: each one a value bound like a tool input, the
+        # step's result carries them under the same names
+        "inputs": {},
+        "inputs_from": "free",
+        "outputs": {},
+    },
     "figures": {
         "group": "data",
         "effect": "internal",

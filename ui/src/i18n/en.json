@@ -1055,7 +1055,8 @@
         "links": "Find links",
         "figures": "Operating figures",
         "archive": "File away (archive)",
-        "export": "Export"
+        "export": "Export",
+        "set": "Set values"
       },
       "actionHint": {
         "mail": "Through the instance's mailbox; needs an approval before it.",
@@ -1065,7 +1066,8 @@
         "links": "Pull web addresses out of a text or document.",
         "figures": "Own figures: cases, approvals, errors, cost.",
         "archive": "Put the case and its files into the archive.",
-        "export": "Export the case as a file."
+        "export": "Export the case as a file.",
+        "set": "Put values or a text together without a model – later steps read them under this step."
       },
       "newDecision": "New decision table …",
       "xorHint": "Take one of several ways depending on a condition.",
@@ -1178,7 +1180,10 @@
         "le": "at most",
         "in": "is one of",
         "raw": "S-FEEL (free)"
-      }
+      },
+      "newValue": "New value (name)",
+      "valueName": "lower case letters, digits and _ – not taken yet",
+      "add": "Add"
     }
   },
   "tasks": {

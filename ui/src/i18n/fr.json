@@ -1055,7 +1055,8 @@
         "links": "Trouver des liens",
         "figures": "Chiffres d'exploitation",
         "archive": "Classer (archive)",
-        "export": "Exporter"
+        "export": "Exporter",
+        "set": "Définir des valeurs"
       },
       "actionHint": {
         "mail": "Via la boîte de l'instance ; nécessite une validation avant.",
@@ -1065,7 +1066,8 @@
         "links": "Extraire des adresses web d'un texte ou d'un document.",
         "figures": "Propres chiffres : dossiers, validations, erreurs, coûts.",
         "archive": "Mettre le dossier et ses fichiers aux archives.",
-        "export": "Exporter le dossier comme fichier."
+        "export": "Exporter le dossier comme fichier.",
+        "set": "Composer des valeurs ou un texte sans modèle – les étapes suivantes les lisent sous cette étape."
       },
       "newDecision": "Nouvelle table de décision …",
       "xorHint": "Prendre un chemin parmi plusieurs selon une condition.",
@@ -1178,7 +1180,10 @@
         "le": "au plus",
         "in": "est l'un de",
         "raw": "S-FEEL (libre)"
-      }
+      },
+      "newValue": "Nouvelle valeur (nom)",
+      "valueName": "minuscules, chiffres et _ – pas encore pris",
+      "add": "Ajouter"
     }
   },
   "tasks": {

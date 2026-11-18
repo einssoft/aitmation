@@ -498,7 +498,7 @@ export interface ActionBlock {
   effect: string;
   config: Record<string, SettingSpec>;
   inputs: Record<string, SettingSpec>;
-  inputs_from?: "collection";
+  inputs_from?: "collection" | "free";
   outputs: Record<string, string>;
 }
 export interface ToolBlock {

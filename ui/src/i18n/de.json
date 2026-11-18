@@ -1055,7 +1055,8 @@
         "links": "Links finden",
         "figures": "Betriebszahlen",
         "archive": "Ablegen (Archiv)",
-        "export": "Exportieren"
+        "export": "Exportieren",
+        "set": "Werte setzen"
       },
       "actionHint": {
         "mail": "Über das Postfach der Instanz; braucht eine Freigabe davor.",
@@ -1065,7 +1066,8 @@
         "links": "Web-Adressen aus Text oder Dokument ziehen.",
         "figures": "Eigene Zahlen: Vorgänge, Freigaben, Fehler, Kosten.",
         "archive": "Den Vorgang mit seinen Dateien ins Archiv legen.",
-        "export": "Den Vorgang als Datei exportieren."
+        "export": "Den Vorgang als Datei exportieren.",
+        "set": "Werte oder einen Text ohne Modell zusammensetzen – spätere Schritte lesen sie unter diesem Schritt."
       },
       "newDecision": "Neue Entscheidungstabelle …",
       "xorHint": "Je nach Bedingung einen von mehreren Wegen gehen.",
@@ -1178,7 +1180,10 @@
         "le": "höchstens",
         "in": "ist einer von",
         "raw": "S-FEEL (frei)"
-      }
+      },
+      "newValue": "Neuer Wert (Name)",
+      "valueName": "Kleinbuchstaben, Ziffern und _ – noch nicht vergeben",
+      "add": "Hinzufügen"
     }
   },
   "tasks": {

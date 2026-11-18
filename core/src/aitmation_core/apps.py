@@ -1233,6 +1233,8 @@ def _parse_scope(
                 _check_rows_step(step, visible.records, where + sub, error)
             if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "links":
                 _check_links_step(step, where + sub, error)
+            if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "set":
+                _check_set_step(step, where + sub, error)
             if step.kind is StepKind.SYSTEM_ACTION and step.config.get("action") == "figures":
                 days = step.config.get("days", 7)
                 if not isinstance(days, int) or not 1 <= days <= 90:
@@ -1691,6 +1693,19 @@ def _check_record_step(step, records: dict, where: str, error) -> None:
     for name, field_spec in schema.fields.items():
         if getattr(field_spec, "required", False) and name not in bound:
             error(where, f"step {step.id!r}: required field {name!r} of {collection!r} is unbound")
+
+
+def _check_set_step(step, where: str, error) -> None:
+    """``set`` binds at least one value; the names become result fields."""
+    bound = step.config.get("inputs") or {}
+    if not isinstance(bound, dict) or not bound:
+        error(where, f"step {step.id!r}: set needs inputs (name -> value)")
+        return
+    for name, path in bound.items():
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", str(name)):
+            error(where, f"step {step.id!r}: {name!r} is not a field name")
+        if not isinstance(path, str) or not _INPUT_PATH.match(path):
+            error(where, f"step {step.id!r}: input {name!r} must be a context path or a text")
 
 
 def _check_links_step(step, where: str, error) -> None:

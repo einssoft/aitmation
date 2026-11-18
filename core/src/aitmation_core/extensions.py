@@ -13,7 +13,8 @@ solutions enabled in the instance. A solution declares it in
     priority = 50
 
     [returns]                      # the fields the point asks for, from this process' steps
-    answer = "offer.text"
+    answer = "offer.text"          # or a list: the first path that holds a value wins,
+                                   # e.g. one per branch: ["offer.answer", "none.answer"]
 
     [topic]                        # what the module is responsible for
     title    = { de = "Termin buchen", en = "Book an appointment" }
@@ -92,8 +93,9 @@ class Extension:
     process: str  # the docked process
     priority: int = 50
     topic: Topic | None = None
-    # field the point asks for -> "<step>.<path>" in the docked process
-    returns: dict[str, str] = field(default_factory=dict)
+    # field the point asks for -> "<step>.<path>" in the docked process, or
+    # several such paths of which the first that holds a value counts
+    returns: dict[str, str | tuple[str, ...]] = field(default_factory=dict)
     app: str = ""  # the solution that declares it; set when the instance loads it
 
 
@@ -180,17 +182,27 @@ def parse_extension(text: str, where: str, extension_id: str) -> Extension:
             raise ExtensionError(
                 f"{where}: keyword(s) {', '.join(short)} are shorter than three letters"
             )
-    returns = raw.get("returns", {})
-    if not isinstance(returns, dict):
+    raw_returns = raw.get("returns", {})
+    if not isinstance(raw_returns, dict):
         raise ExtensionError(f'{where}: [returns] is a table of field = "<step>.<path>"')
-    for name, path in returns.items():
+    returns: dict[str, str | tuple[str, ...]] = {}
+    for name, path in raw_returns.items():
         if not re.fullmatch(r"[a-z][a-z0-9_]*", str(name)):
             raise ExtensionError(f"{where}: returns.{name} is not a field name")
-        if not isinstance(path, str) or not _RETURN_PATH.match(path):
-            raise ExtensionError(f'{where}: returns.{name} is a path like "<step>.<field>"')
+        paths = path if isinstance(path, list) else [path]
+        if not paths or not all(isinstance(p, str) and _RETURN_PATH.match(p) for p in paths):
+            raise ExtensionError(
+                f'{where}: returns.{name} is a path like "<step>.<field>" or a list of them'
+            )
+        returns[str(name)] = paths[0] if isinstance(path, str) else tuple(paths)
     return Extension(
-        id=extension_id, priority=priority, topic=topic, returns=dict(returns), **values
+        id=extension_id, priority=priority, topic=topic, returns=returns, **values
     )
+
+
+def return_paths(path: str | tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    """The candidate paths of one returned field, in order."""
+    return (path,) if isinstance(path, str) else tuple(path)
 
 
 def check_against_point(
@@ -212,11 +224,12 @@ def check_against_point(
             " it under [returns]"
         )
     for name, path in extension.returns.items():
-        if path.split(".", 1)[0] not in docked_steps:
-            raise ExtensionError(
-                f"{where}: returns.{name} reads step {path.split('.', 1)[0]!r}, which process"
-                f" {extension.process!r} does not have"
-            )
+        for candidate in return_paths(path):
+            if candidate.split(".", 1)[0] not in docked_steps:
+                raise ExtensionError(
+                    f"{where}: returns.{name} reads step {candidate.split('.', 1)[0]!r}, which"
+                    f" process {extension.process!r} does not have"
+                )
 
 
 @dataclass(frozen=True)

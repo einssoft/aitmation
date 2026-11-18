@@ -990,3 +990,35 @@ def test_a_json_read_runs_without_a_gate_and_an_empty_list_takes_empty(tmp_path)
         assert flagged and "fetch.search" in json.dumps([dict(f) for f in flagged])
     finally:
         runtime.close()
+
+
+def test_a_tool_of_a_dependency_runs_in_the_dependent_solution(tmp_path):
+    """The validator lets a process use a dependency's root tools
+    (ADR-0035 §4); at run time the same tool is found there too."""
+    apps_dir = tmp_path / "apps"
+    base = apps_dir / "tools-base"
+    (base / "tools").mkdir(parents=True)
+    (base / "solution.toml").write_text(
+        'format = 2\nid = "tools-base"\nversion = "0.1.0"\nname = "Tools"\n', encoding="utf-8")
+    (base / "tools" / "publish.toml").write_text(PUBLISH_TOOL, encoding="utf-8")
+    (base / "tools" / "render-image.toml").write_text(RENDER_TOOL, encoding="utf-8")
+    ext = apps_dir / "poster"
+    (ext / "processes").mkdir(parents=True)
+    (ext / "solution.toml").write_text(
+        'format = 2\nid = "poster"\nversion = "0.1.0"\nname = "Poster"\n'
+        '[dependencies]\ntools-base = "^0.1"\n', encoding="utf-8")
+    (ext / "processes" / "post.bpmn").write_text(PROCESS, encoding="utf-8")
+    runtime = Runtime(Settings(data_dir=tmp_path / "data", templates_dir=CORE_TEMPLATES,
+                               apps_dir=apps_dir))
+    try:
+        assert "render-image" not in runtime.apps["poster"].tools  # provided, not owned
+        case_id = runtime.engine.start_case("post", {"source": "manual", "caption": "Hi", "prompt": "a cat"})
+        runtime.tick()
+        gate = next(g for g in runtime.open_gates() if g["case_id"] == case_id)
+        runtime.engine.decide_gate(case_id, gate["step_id"], "approved", actor_id="alex")
+        runtime.tick()
+        (task,) = runtime.open_client_tasks()
+        assert task["params"]["tool"] == "render-image"
+        assert task["params"]["inputs"] == {"prompt": "a cat"}
+    finally:
+        runtime.close()

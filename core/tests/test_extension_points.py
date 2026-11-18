@@ -370,3 +370,69 @@ def test_the_graph_view_keeps_the_point(tmp_path):
     assert validate_app(
         tmp_path / "apps" / "desk", core_definitions=load_templates(CORE_TEMPLATES)
     ).ok
+
+
+# A module whose branches end in different steps: each branch puts its
+# answer into a ``set`` step, the declaration names them in order.
+BRANCHED = """
+  <bpmn:startEvent id="start"><bpmn:extensionElements><aimn:trigger source="chain"/></bpmn:extensionElements></bpmn:startEvent>
+  <bpmn:task id="offer"><bpmn:extensionElements><aimn:aiTask ref="offer"/></bpmn:extensionElements></bpmn:task>
+  <bpmn:serviceTask id="offered"><bpmn:extensionElements><aimn:toolCall action="set">
+    <aimn:property name="inputs"><aimn:property name="answer" value="template:Gerne: {steps.offer.text}"/></aimn:property>
+  </aimn:toolCall></bpmn:extensionElements></bpmn:serviceTask>
+  <bpmn:serviceTask id="sorry"><bpmn:extensionElements><aimn:toolCall action="set">
+    <aimn:property name="inputs"><aimn:property name="answer" value="literal:Leider gerade nicht."/></aimn:property>
+  </aimn:toolCall></bpmn:extensionElements></bpmn:serviceTask>
+  <bpmn:endEvent id="finished"/>
+  <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="offer"/>
+  <bpmn:sequenceFlow id="f2" name="done" sourceRef="offer" targetRef="offered"/>
+  <bpmn:sequenceFlow id="f3" name="failed" sourceRef="offer" targetRef="sorry"/>
+  <bpmn:sequenceFlow id="f4" name="done" sourceRef="offered" targetRef="finished"/>
+  <bpmn:sequenceFlow id="f5" name="failed" sourceRef="offered" targetRef="finished"/>
+  <bpmn:sequenceFlow id="f6" name="done" sourceRef="sorry" targetRef="finished"/>
+  <bpmn:sequenceFlow id="f7" name="failed" sourceRef="sorry" targetRef="finished"/>
+"""
+
+
+def _branched(tmp_path: Path, returns: str) -> Path:
+    apps = tmp_path / "apps"
+    _write(apps / "desk", "desk", "ask", DESK, "answer", "writer")
+    module = _write(
+        apps / "booking", "booking", "booking-offer", BRANCHED, "offer", "writer", 'desk = "^0.1"'
+    )
+    (module / "extensions").mkdir()
+    (module / "extensions" / "booking.toml").write_text(
+        BOOKING.replace('answer = "offer.text"', returns), encoding="utf-8"
+    )
+    return apps
+
+
+def test_a_returned_field_takes_the_first_path_with_a_value(world, tmp_path):
+    _branched(tmp_path, 'answer = ["sorry.answer", "offered.answer"]\nslot = "offer.text"')
+    runtime, _ = world()
+    outcome, result, steps = _ask(runtime, "Kann ich einen Termin buchen?")
+    assert outcome == "done" and "answer" not in steps
+    # the "sorry" branch did not run: the next path holds the answer
+    assert result["answer"] == "Gerne: Free on Thursday at 10:00."
+    assert result["slot"] == "Free on Thursday at 10:00."
+    assert result["outputs"]["offered"]["answer"] == "Gerne: Free on Thursday at 10:00."
+
+
+def test_returns_list_and_set_inputs_are_checked(tmp_path):
+    with pytest.raises(extensions.ExtensionError, match="list of them"):
+        extensions.parse_extension(
+            BOOKING.replace('answer = "offer.text"', "answer = []"), "x", "booking"
+        )
+    with pytest.raises(extensions.ExtensionError, match="does not have"):
+        booking = extensions.parse_extension(
+            BOOKING.replace('answer = "offer.text"', 'answer = ["offer.text", "nope.answer"]'),
+            "x", "booking",
+        )
+        extensions.check_against_point(
+            booking, {"mode": "takeover", "returns": ["answer"]}, {"offer"}, "x"
+        )
+    apps = _branched(tmp_path, 'answer = ["offered.answer", "sorry.answer"]')
+    bad = (apps / "booking" / "processes" / "booking-offer.bpmn")
+    bad.write_text(bad.read_text().replace('name="answer" value="literal:Leider gerade nicht."', 'name="Answer" value="literal:x"'))
+    report = validate_app(apps / "booking", core_definitions=load_templates(CORE_TEMPLATES))
+    assert any("not a field name" in str(e) for e in report.errors), report.errors

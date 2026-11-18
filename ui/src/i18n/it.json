@@ -1055,7 +1055,8 @@
         "links": "Trovare link",
         "figures": "Cifre operative",
         "archive": "Archiviare",
-        "export": "Esportare"
+        "export": "Esportare",
+        "set": "Impostare valori"
       },
       "actionHint": {
         "mail": "Tramite la casella dell'istanza; richiede un'approvazione prima.",
@@ -1065,7 +1066,8 @@
         "links": "Estrarre indirizzi web da un testo o documento.",
         "figures": "Cifre proprie: pratiche, approvazioni, errori, costi.",
         "archive": "Mettere la pratica e i suoi file in archivio.",
-        "export": "Esportare la pratica come file."
+        "export": "Esportare la pratica come file.",
+        "set": "Comporre valori o un testo senza modello – i passi successivi li leggono sotto questo passo."
       },
       "newDecision": "Nuova tabella decisionale …",
       "xorHint": "Prendere una di più strade secondo una condizione.",
@@ -1178,7 +1180,10 @@
         "le": "al massimo",
         "in": "è uno di",
         "raw": "S-FEEL (libero)"
-      }
+      },
+      "newValue": "Nuovo valore (nome)",
+      "valueName": "minuscole, cifre e _ – non ancora usato",
+      "add": "Aggiungi"
     }
   },
   "tasks": {

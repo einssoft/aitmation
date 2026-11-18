@@ -2914,6 +2914,10 @@ class Runtime:
                 self._extract_links(step, definition, config)
                 count += 1
                 continue
+            if action == "set":
+                self._set_values(step, definition, config)
+                count += 1
+                continue
             if action == "figures":
                 self._figures(step, definition, config)
                 count += 1
@@ -3491,6 +3495,24 @@ class Runtime:
             actor_type="system", actor_id="record-action", row_id=step["id"],
         )
 
+    def _set_values(self, step, definition: ProcessDefinition, config: dict) -> None:
+        """Internal action ``set``: values bound like tool inputs (paths,
+        ``literal:``, ``template:``) become the step's result under the
+        same names - a text put together without a model, a value carried
+        to a fixed place. A later step or a caller reads them as
+        ``steps.<id>.<name>``."""
+        case_id, step_id = step["case_id"], step["step_id"]
+        step_def = definition.steps[step_id]
+        try:
+            values = self._resolve_tool_inputs(case_id, config, step)
+        except KeyError as exc:
+            self._fail_action(step, step_def, str(exc))
+            return
+        self.engine.complete_step(
+            case_id, step_id, "done", result=values,
+            actor_type="system", actor_id="set-action", row_id=step["id"],
+        )
+
     def _make_pdf(self, step, definition: ProcessDefinition, config: dict) -> None:
         """Internal action ``pdf``: a plain text PDF (``title``, ``text``)
         as a file of this case (``media/<case>/<name>.pdf``) - an offer, a
@@ -3817,10 +3839,18 @@ class Runtime:
         if not tool_id:
             return None
         app_id = self.template_app.get(self._template_of(case_id))
-        app = self.apps.get(app_id or "")
-        if app is None:
-            return None
-        return app.tools.get(tool_id)
+        # The solution's own tools first, then the root tools of its
+        # dependencies (ADR-0035 §4), as the validator resolved them.
+        queue, seen = [app_id or ""], set()
+        while queue:
+            app = self.apps.get(queue.pop(0))
+            if app is None or app.id in seen:
+                continue
+            seen.add(app.id)
+            if tool_id in app.tools:
+                return app.tools[tool_id]
+            queue.extend(app.manifest.dependencies)
+        return None
 
     def _resolve_tool_inputs(self, case_id: str, config: dict, step_row=None) -> dict:
         """The step's bound inputs (ADR-0041 §2) from the case context:

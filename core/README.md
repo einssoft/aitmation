@@ -199,6 +199,24 @@ must lie inside the instance, and `budget_chf` caps the operator's
 model per tenant. One clock ticks all instances in memory; quiet ones
 sleep until the next request.
 
+## Setting values without a model: the `set` action
+
+A `serviceTask` with `<aimn:toolCall action="set">` binds values like tool
+inputs - a path (`steps.offer.text`, `trigger.lang`), `literal:<text>` or
+`template:<text with {path} placeholders>` - and its result carries them
+under the same names. It is internal (no gate) and has the outcomes `done`
+and `failed` (a path that resolves to nothing).
+
+```xml
+<bpmn:serviceTask id="offered"><bpmn:extensionElements>
+  <aimn:toolCall action="set">
+    <aimn:property name="inputs">
+      <aimn:property name="answer" value="template:Free on {steps.wish.day}:"/>
+    </aimn:property>
+  </aimn:toolCall>
+</bpmn:extensionElements></bpmn:serviceTask>
+```
+
 ## Extension points: one solution docks onto another's process
 
 A process can leave a place open for other solutions. In the BPMN file it
@@ -232,6 +250,11 @@ describe = { en = "Free slots, booking, rescheduling." }
 examples = { en = ["When is the next free slot?"] }
 keywords = { en = ["appointment", "book", "slot"] }
 ```
+
+A returned field may name several paths, `answer = ["offered.answer",
+"sorry.answer"]`: the first that holds a value counts. That lets a module
+whose branches end in different steps deliver one answer - each branch puts
+its text into a `set` step (below).
 
 Who takes over is decided in two stages (`extensions.py`). A pre-filter
 without any model finds the topics that *come into question*: a keyword

@@ -28,7 +28,7 @@ sub-process starts with the hand-over payload (ADR-0014 chaining)."""
 INTERNAL_ACTIONS = frozenset(
     {
         "export", "archive", "dispatch", "decide", "call", "join", "record", "knowledge", "rows",
-        "links", "figures", "route", "file", "pdf", "extend",
+        "links", "figures", "route", "file", "pdf", "extend", "set",
     }
 )
 """Built-in SystemActions that only write inside the instance's own data

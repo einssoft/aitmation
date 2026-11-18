@@ -513,15 +513,17 @@ class Engine:
         ``note`` is kept in the step's result next to the outputs (why this
         child was called); ``returns`` maps result fields to paths into the
         child's outputs (``answer`` <- ``offer.text``), so the caller reads
-        ``steps.<id>.answer`` without knowing the child's steps."""
+        ``steps.<id>.answer`` without knowing the child's steps. A field may
+        name several paths; the first that holds a value counts."""
         definition, step = self._open_step(case_id, step_id, {"pending"})
         target = self._definition(template_id)
         chain_id = self._case(case_id)["chain_id"] or case_id
         handoff = self._handoff_payload(case_id, definition, chain_id)
         handoff["source"] = "call"
+        held_returns = {k: v if isinstance(v, str) else list(v) for k, v in (returns or {}).items()}
         self.conn.execute("BEGIN")
         try:
-            held = {"note": note or {}, "returns": returns or {}} if (note or returns) else None
+            held = {"note": note or {}, "returns": held_returns} if (note or returns) else None
             self.conn.execute(
                 "UPDATE steps SET status = 'waiting', result = ? WHERE id = ?",
                 (json.dumps(held, default=str) if held else None, step["id"]),
@@ -563,7 +565,17 @@ class Engine:
         if isinstance(held, dict):
             result.update(held.get("note") or {})
             for name, path in (held.get("returns") or {}).items():
-                result[name] = _lookup_path(outputs, path)
+                # one path, or several of which the first with a value
+                # counts (one per branch of the child)
+                candidates = [path] if isinstance(path, str) else list(path or [])
+                result[name] = next(
+                    (
+                        found
+                        for found in (_lookup_path(outputs, p) for p in candidates)
+                        if found not in (None, "", [], {})
+                    ),
+                    None,
+                )
         result.update({"child_case": case_id, "outputs": outputs})
         self.conn.execute(
             "UPDATE steps SET status = 'completed', outcome = ?, result = ?, finished_at = ?"
