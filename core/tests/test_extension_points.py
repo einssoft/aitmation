@@ -436,3 +436,24 @@ def test_returns_list_and_set_inputs_are_checked(tmp_path):
     bad.write_text(bad.read_text().replace('name="answer" value="literal:Leider gerade nicht."', 'name="Answer" value="literal:x"'))
     report = validate_app(apps / "booking", core_definitions=load_templates(CORE_TEMPLATES))
     assert any("not a field name" in str(e) for e in report.errors), report.errors
+
+
+class Refusing(Model):
+    """Says it cannot do the task - the answer the system prompt asks for."""
+
+    def complete_structured(self, task, payload, schema_hint=None):
+        self.tasks.append(task)
+        return ModelResponse(data={"confidence": 0.0, "error": "no input text"}, confidence=0.0,
+                             model_ref="fake@1", tokens_in=1, tokens_out=1)
+
+
+def test_a_model_that_cannot_do_the_task_fails_the_step(world):
+    """{"confidence": 0, "error": ...} is a failure with the model's reason,
+    not a draft that looks done (and then waits for an approval of nothing)."""
+    runtime, _ = world(Refusing(), booking=None)
+    _, _, steps = _ask(runtime, "Wie geht es?")
+    assert steps["answer"] == "failed"
+    row = runtime.conn.execute("SELECT result FROM steps WHERE step_id = 'answer'").fetchone()
+    assert "model could not do the task: no input text" in json.loads(row["result"])["error"]
+    diag = runtime.conn.execute("SELECT detail FROM diagnostic_events WHERE event = 'agent_step_failed'").fetchone()
+    assert "no input text" in diag["detail"]

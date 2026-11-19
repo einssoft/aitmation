@@ -2347,6 +2347,17 @@ class Runtime:
             )
             return
         result = response.data
+        declared = config.get("output") if isinstance(config.get("output"), dict) else {}
+        if isinstance(result, dict) and result.get("error") and "error" not in declared:
+            # The model said it could not do the task ({"confidence": 0,
+            # "error": ...} - the system prompt asks for exactly that): a
+            # failure with its reason, not an empty draft that looks done.
+            self._fail_agent_step(
+                step, definition, payload,
+                f"model could not do the task: {str(result['error'])[:300]}"
+                f" (model {response.model_ref})",
+            )
+            return
         if knowledge and config.get("knowledge_cite") and isinstance(result, dict):
             # Provenance from the retrieval, not from the model: what the
             # step was given, numbered as the model saw it (ADR-0031).
