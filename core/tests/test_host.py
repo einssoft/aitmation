@@ -390,3 +390,78 @@ def test_a_free_plan_builds_one_project(host):
         assert more.status_code == 201
         bad = client.put("/host/tenants/alpha", headers=OPERATOR, json={"max_projects": -1})
         assert bad.status_code == 422
+
+
+def test_a_single_instance_in_the_root_becomes_a_tenant(tmp_path):
+    """The container ran as one instance on /data; started as a host with
+    AITMATION_HOST_ADOPT it keeps everything - callers add /m/<slug>."""
+    import shutil as sh
+
+    from aitmation_core.config import load_settings
+    from aitmation_core.runtime import Runtime
+
+    root = tmp_path / "data"
+    single = load_settings({"AITMATION_DATA_DIR": str(root)})
+    single.ensure_layout()
+    Runtime(single, model_client=None).close()
+    sh.copytree(APPS / "tasks", root / "apps" / "tasks")
+    (root / "apps" / ".managed").write_text("tasks\nnot-in-the-library\n", encoding="utf-8")
+    core_secrets.save_secret(root, "crm_token", "kept")
+    key = "service:" + "k" * 30
+    env = {"AITMATION_ACCESS_KEY": key, "AITMATION_INSTANCE_TITLE": "Demo",
+           "AITMATION_SMTP_HOST": "mail.example", "AITMATION_SMTP_PORT": "465",
+           "AITMATION_SMTP_PASSWORD": "pw", "AITMATION_CONFINE_PATHS": "false"}
+
+    def make() -> Host:
+        return Host(
+            root, auth_secret=SECRET, host_key=KEY, solutions_dir=APPS, env=env, adopt="demo",
+            model_factory=lambda settings: None,
+            mail_factory=lambda settings, config=None: None,
+        )
+
+    host = make()
+    try:
+        data = host.directory("demo") / "data"
+        assert (data / "aitmation.db").is_file() and not (root / "aitmation.db").exists()
+        assert core_secrets.load_file_secrets(data)["crm_token"] == "kept"
+        # what the container's environment configured stays with the instance
+        config = (data / "config.toml").read_text(encoding="utf-8")
+        assert 'smtp_host = "mail.example"' in config and "smtp_port = 465" in config
+        assert "confine_paths" not in config  # the host decides that one
+        assert core_secrets.load_file_secrets(data)["smtp_password"] == "pw"
+        assert not core_secrets.is_tool_secret("access_key")
+        tenant = host.get("demo")
+        assert tenant.title == "Demo" and tenant.solutions == ("tasks",)
+        with TestClient(host) as client:
+            program = {"Authorization": "Bearer " + "k" * 30}
+            assert client.get("/m/demo/api/v1/instance", headers=program).json()["id"] == "demo"
+            assert client.get("/m/demo/api/v1/instance").status_code == 401
+            client.put("/host/tenants/other", headers=OPERATOR, json={"title": "Other"})
+            assert client.get("/m/other/api/v1/instance", headers=program).status_code == 401
+            assert client.get("/host/tenants/demo", headers=OPERATOR).json()["service_key"] is True
+            assert "k" * 30 not in client.get("/host/tenants", headers=OPERATOR).text
+    finally:
+        host.close()
+        core_secrets.ignore_environment(False)
+    # the second start leaves everything where it is
+    again = make()
+    try:
+        assert [t.slug for t in again.tenants()] == ["demo", "other"]
+    finally:
+        again.close()
+        core_secrets.ignore_environment(False)
+
+
+def test_the_operator_gives_a_tenant_a_service_key(host):
+    with TestClient(host) as client:
+        client.put("/host/tenants/acme", headers=OPERATOR, json={"title": "Acme"})
+        program = {"Authorization": "Bearer " + "p" * 32}
+        assert client.get("/m/acme/api/v1/instance", headers=program).status_code == 401
+        r = client.put("/host/tenants/acme", headers=OPERATOR, json={"service_key": "bot:short"})
+        assert r.status_code == 422
+        long_key = {"service_key": "bot:" + "p" * 32}
+        r = client.put("/host/tenants/acme", headers=OPERATOR, json=long_key)
+        assert r.status_code == 200 and "p" * 32 not in r.text
+        assert client.get("/m/acme/api/v1/instance", headers=program).json()["id"] == "acme"
+        client.put("/host/tenants/acme", headers=OPERATOR, json={"service_key": ""})
+        assert client.get("/m/acme/api/v1/instance", headers=program).status_code == 401

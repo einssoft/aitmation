@@ -104,10 +104,20 @@ def is_valid_name(name: str) -> bool:
     return name in KNOWN_SECRETS or bool(_TOOL_SECRET.match(name))
 
 
+# Held in the file but never handed to a tool: the key that opens this
+# instance to programs in a shared host (host.py, service key).
+RESERVED_SECRETS = frozenset({"access_key"})
+
+
 def is_tool_secret(name: str) -> bool:
     """Tool declarations (ADR-0041) may only reach secrets of their own
-    namespace - never the instance's model keys or mail password."""
-    return name not in KNOWN_SECRETS and bool(_TOOL_SECRET.match(name))
+    namespace - never the instance's model keys, mail password or the key
+    that opens the instance."""
+    return (
+        name not in KNOWN_SECRETS
+        and name not in RESERVED_SECRETS
+        and bool(_TOOL_SECRET.match(name))
+    )
 
 
 def load_file_secrets(data_dir: Path) -> dict[str, str]:

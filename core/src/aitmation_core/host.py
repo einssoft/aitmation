@@ -41,7 +41,15 @@ What sharing a process demands, and where it is enforced:
 (the operator's key for ``/host/…``; required), ``AITMATION_LOGIN_URL``
 (where people sign in), ``AITMATION_SOLUTIONS_DIR`` (the library of
 solutions tenants can be given), ``AITMATION_HOST_BASE_SOLUTIONS``
-(comma list every new tenant starts with), ``AITMATION_HOST_IDLE_SECONDS``.
+(comma list every new tenant starts with), ``AITMATION_HOST_IDLE_SECONDS``,
+``AITMATION_HOST_ADOPT`` (a slug: a single instance that lived in the root
+becomes this tenant on the first start - see ``Host.adopt``).
+
+Programs reach a tenant with its **service key** (the tenant's secret
+``access_key``, ``name:password``; ``Authorization: Bearer <password>``),
+set by the operator through ``PUT /host/tenants/<slug>`` with
+``service_key``. It opens that one instance and nothing else - the way the
+access key opens a container of its own.
 """
 
 from __future__ import annotations
@@ -118,6 +126,13 @@ SHARED_SETTINGS = (
     "embedding_model",
 )
 LENT_SECRETS = ("whisper_token",)
+# Settings the host sets for every tenant (settings_for) - never taken over
+# from a single instance's environment on adoption.
+HOST_DECIDES = frozenset({
+    "data_dir", "instance_id", "instance_title", "instance_type", "language", "host", "port",
+    "tools_allow_private_hosts", "mcp_allow_stdio", "confine_paths", "max_projects",
+    "monthly_budget_chf", "budget_stop", "embedding_cache_dir",
+})
 
 
 class HostError(Exception):
@@ -255,6 +270,7 @@ class Host:
         env: dict[str, str] | None = None,
         model_factory: Callable | None = None,
         mail_factory: Callable | None = None,
+        adopt: str = "",
     ) -> None:
         if not auth_secret or not host_key:
             raise HostError("the host needs AITMATION_AUTH_SECRET and AITMATION_HOST_KEY")
@@ -283,9 +299,95 @@ class Host:
         self.mail_factory = mail_factory or default_mail_source
         self._loaded: dict[str, Loaded] = {}
         self._lock = threading.RLock()
+        if adopt:
+            self.adopt(adopt)
         # The environment is the operator's from here on (module docstring).
         core_secrets.ignore_environment(True, lend=LENT_SECRETS)
         self.app = self._build_root()
+
+    def adopt(self, slug: str) -> bool:
+        """A single instance that lived in the root directory (the same
+        volume, before the container ran as a host) becomes the tenant
+        ``slug``: its files move into the tenant's data directory as they
+        are, the solutions the image had placed stay booked, and the
+        container's access key becomes the tenant's service key - callers
+        only add ``/m/<slug>`` to their address. Once: a root without a
+        database, or a tenant of that name, is left alone."""
+        if not (self.root / "aitmation.db").is_file():
+            return False
+        target = self.directory(slug)
+        if target.exists():
+            log.warning("adopt: tenant %s exists already - the root instance stays", slug)
+            return False
+        data = target / "data"
+        data.mkdir(parents=True)
+        host_own = {self.tenants_dir.name, self.removed_dir.name, self.models_dir.name}
+        for entry in sorted(self.root.iterdir()):
+            if entry.name not in host_own:
+                shutil.move(str(entry), str(data / entry.name))
+        managed = data / "apps" / ".managed"
+        booked = tuple(managed.read_text(encoding="utf-8").split()) if managed.is_file() else ()
+        if self.solutions_dir is not None:
+            library = self.solutions_dir
+            booked = tuple(b for b in booked if (library / b / "solution.toml").is_file())
+        tenant = Tenant(
+            slug=slug,
+            title=self.env.get("AITMATION_INSTANCE_TITLE", "") or slug,
+            language=self.env.get("AITMATION_LANGUAGE", "de")
+            if self.env.get("AITMATION_LANGUAGE", "de") in ("de", "fr", "it", "en")
+            else "de",
+            solutions=booked,
+            created_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        )
+        _write_tenant(target / "tenant.toml", tenant)
+        self._keep_environment(data)
+        key = self.env.get("AITMATION_ACCESS_KEY", "").strip()
+        if key and ":" in key and not core_secrets.load_file_secrets(data).get("access_key"):
+            core_secrets.save_secret(data, "access_key", key)
+        log.info("adopted the instance in %s as tenant %s (%d solutions)",
+                 self.root, slug, len(booked))
+        return True
+
+    def _keep_environment(self, data: Path) -> None:
+        """What the single instance got from the container's environment
+        (SMTP, transcription address, keys) would be lost in a host, where
+        the environment is the operator's: write it into the instance's
+        own files - config.toml and secrets.toml - where nothing set there
+        is overwritten."""
+        from dataclasses import fields
+
+        from .config import save_config_values
+
+        skip = set(SHARED_SETTINGS) | HOST_DECIDES
+        current = load_settings({"AITMATION_DATA_DIR": str(data)})
+        config = data / "config.toml"
+        in_file = tomllib.loads(config.read_text(encoding="utf-8")) if config.is_file() else {}
+        keep: dict[str, object] = {}
+        for f in fields(Settings):
+            raw = self.env.get(f"AITMATION_{f.name.upper()}", "")
+            if f.name in skip or f.name in in_file or not raw.strip():
+                continue
+            one = {"AITMATION_DATA_DIR": str(data), f"AITMATION_{f.name.upper()}": raw}
+            typed = getattr(load_settings(one), f.name)
+            if isinstance(typed, tuple):
+                typed = ",".join(str(v) for v in typed)
+            elif isinstance(typed, Path):
+                typed = str(typed)
+            if isinstance(typed, bool | int | float | str):
+                keep[f.name] = typed
+        if keep:
+            save_config_values(current, keep)
+        for name, env_name in core_secrets.KNOWN_SECRETS.items():
+            value = self.env.get(env_name, "").strip()
+            if value and not core_secrets.load_file_secrets(data).get(name):
+                core_secrets.save_secret(data, name, value)
+        if keep:
+            log.info("adopt: kept %s from the environment", ", ".join(sorted(keep)))
+
+    def service_key(self, slug: str) -> str:
+        """``name:password`` that opens this tenant to programs, or ""."""
+        found = core_secrets.load_file_secrets(self.directory(slug) / "data").get("access_key")
+        return (found or "").strip()
 
     # -- tenants on disk ---------------------------------------------------------
 
@@ -382,6 +484,7 @@ class Host:
                 "solutions",
                 "budget_chf",
                 "max_projects",
+                "service_key",
             }
             if unknown:
                 raise HostError(f"unknown fields {sorted(unknown)}")
@@ -416,6 +519,13 @@ class Host:
                 tenant.solutions = tuple(wanted)
             tenant.solutions = self._with_dependencies(tenant.solutions)
             (directory / "data").mkdir(parents=True, exist_ok=True)
+            if "service_key" in values:
+                key = str(values["service_key"] or "").strip()
+                if key and (":" not in key or len(key.partition(":")[2]) < 24):
+                    raise HostError(
+                        "service_key: name:password, the password at least 24 characters"
+                    )
+                core_secrets.save_secret(directory / "data", "access_key", key)
             _write_tenant(path, tenant)
             self.unload(slug)  # the next request starts it with what is true now
         return tenant
@@ -518,7 +628,7 @@ class Host:
                 model_factory=self.model_factory,
                 mail_factory=self.mail_factory,
                 auth_secret=self.auth_secret,
-                access_key="",
+                access_key=self.service_key(slug),
                 login_url=self.login_url,
                 scoped_roles=True,
                 lifespan_tasks=False,
@@ -774,7 +884,11 @@ class Host:
         @app.get("/host/tenants/{slug}")
         def tenant_get(slug: str, request: Request) -> dict:
             host._operator(request)
-            return {**host.get(slug).view(), "in_memory": slug in host.loaded()}
+            return {
+                **host.get(slug).view(),
+                "in_memory": slug in host.loaded(),
+                "service_key": bool(host.service_key(slug)),
+            }
 
         @app.put("/host/tenants/{slug}")
         async def tenant_put(slug: str, request: Request) -> dict:
@@ -895,6 +1009,7 @@ def host_from_env(env: dict[str, str] | None = None) -> Host:
         parallel_ticks=int(env.get("AITMATION_HOST_PARALLEL_TICKS", "4")),
         max_tenants=int(env.get("AITMATION_HOST_MAX_TENANTS", "0")),
         env=env,
+        adopt=env.get("AITMATION_HOST_ADOPT", "").strip(),
     )
 
 
